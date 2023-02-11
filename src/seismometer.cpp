@@ -34,7 +34,7 @@ int main()
 
   printf("Starting boot.\n");
   watchdog_enable(100, 1);
-  i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 200*1000);
+  i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
   mpu_6500_init(i2c0);
   watchdog_update();
@@ -57,7 +57,8 @@ int main()
 
     printf("i: % 6u hz: %u - X: % 6d Y: % 6d Z: % 6d %M: % 6u T: % 2d.%03u\n", 
       i, ((i*1000)/(to_ms_since_boot(now)-loop_start_time)),
-      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, acceleration_magnitude, temperature/1000, temperature%1000);
+      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, 
+      mpu_6500_acceleration_to_mm_ps2(acceleration_magnitude), temperature/1000, temperature%1000);
     i++;
   }
 
