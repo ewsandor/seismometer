@@ -17,8 +17,6 @@ void i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
   gpio_set_function(scl_pin, GPIO_FUNC_I2C);
   gpio_pull_up(sda_pin);
   gpio_pull_up(scl_pin);
-  // Make the I2C pins available to picotool
-  bi_decl(bi_2pins_with_func(sda_pin, scl_pin, GPIO_FUNC_I2C));
 }
 
 int main() 
@@ -34,6 +32,7 @@ int main()
 
   printf("Starting boot.\n");
   watchdog_enable(100, 1);
+  bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
   mpu_6500_init(i2c0);

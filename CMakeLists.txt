@@ -13,6 +13,12 @@ pico_sdk_init()
 add_executable( seismometer
                 src/seismometer.cpp
                 src/mpu-6500.cpp )
+
+# Metadata
+pico_set_program_name(seismometer "Sandor Laboratories Seismometer")
+pico_set_program_description(seismometer "Software for my homemade seismometer")
+pico_set_program_url(seismometer "https://git.sandorlaboratories.com/edward/seismometer/")
+
 # Include directory
 include_directories(seismometer inc)
 
