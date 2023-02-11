@@ -9,10 +9,12 @@ project(seismometer)
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+# Main executible
 add_executable( seismometer
-                seismometer.cpp
-                mpu-6500.cpp
-)
+                src/seismometer.cpp
+                src/mpu-6500.cpp )
+# Include directory
+include_directories(seismometer inc)
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(seismometer pico_stdlib hardware_i2c)
