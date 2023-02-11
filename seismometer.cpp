@@ -53,10 +53,11 @@ int main()
     uint acceleration_magnitude = sqrt((accelerometer_data.x*accelerometer_data.x) + 
                                        (accelerometer_data.y*accelerometer_data.y) + 
                                        (accelerometer_data.z*accelerometer_data.z));
+    m_celsius_t temperature = mpu_6500_temperature_to_m_celsius(mpu_6500_temperature());
 
-    printf("i: %06u hz: %u - X: %06d Y: %06d Z: %06d %M: %06u T: %06u\n", 
+    printf("i: % 6u hz: %u - X: % 6d Y: % 6d Z: % 6d %M: % 6u T: % 2d.%03u\n", 
       i, ((i*1000)/(to_ms_since_boot(now)-loop_start_time)),
-      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, acceleration_magnitude, mpu_6500_temperature());
+      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, acceleration_magnitude, temperature/1000, temperature%1000);
     i++;
   }
 

@@ -57,12 +57,14 @@ void mpu_6500_init(i2c_inst_t *i2c_inst)
   write_buffer[0] = 29;
   write_buffer[1] = (A_DLPF_CFG_460<<0);
   assert(2 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
-  #if 0
   //Register 35 – FIFO Enable
   write_buffer[0] = 35;
   write_buffer[1] = (1<<7) /*TEMP_OUT*/ | (1<<3) /*ACCEL*/;
-  assert(2 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
-  #endif
+  //assert(2 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  //Register 56 – Interrupt Enable
+  write_buffer[0] = 56;
+  write_buffer[1] = (1<<0) /*RAW_RDY_EN*/;
+  //assert(2 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
 }
 
 mpu_6500_accelerometer_data_s last_accelerometer_data = {0};
@@ -92,4 +94,13 @@ void mpu_6500_accelerometer_data(mpu_6500_accelerometer_data_s *accelerometer_da
 mpu_6500_temperature_t mpu_6500_temperature()
 {
   return last_temperature;
+}
+
+//((TEMP_OUT – RoomTemp_Offset)/Temp_Sensitivity) + 21degC
+m_celsius_t mpu_6500_temperature_to_m_celsius(mpu_6500_temperature_t temp_out)
+{
+  const int64_t roomtemp_offset = 0;
+  const int64_t temp_sensitivity = 333870; //333.87 LSB/°C
+
+  return (((((int64_t)temp_out-roomtemp_offset)*1000*1000)/temp_sensitivity)+21000);
 }
