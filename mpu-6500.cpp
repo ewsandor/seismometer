@@ -71,48 +71,16 @@ mpu_6500_temperature_t last_temperature;
 
 void mpu_6500_loop()
 {
-  uint8_t read_buffer;
+  uint8_t read_buffer[8];
   uint8_t register_address;
-
-  last_accelerometer_data = {0};
 
   register_address = ACCEL_XOUT_H;
   assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_accelerometer_data.x |= (read_buffer << 8);
-  register_address = ACCEL_XOUT_L;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_accelerometer_data.x |= read_buffer;
-
-  register_address = ACCEL_YOUT_H;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_accelerometer_data.y |= (read_buffer << 8);
-  register_address = ACCEL_YOUT_L;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_accelerometer_data.y |= read_buffer;
-
-
-  register_address = ACCEL_ZOUT_H;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_accelerometer_data.z |= (read_buffer << 8);
-  register_address = ACCEL_ZOUT_L;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_accelerometer_data.z |= read_buffer;
-
-  last_temperature = 0;
-  register_address = TEMP_OUT_H;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_temperature |= (read_buffer << 8);
-  register_address = TEMP_OUT_L;
-  assert(1 == i2c_write_blocking(mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(1 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, &read_buffer,      1, false));
-  last_temperature |= read_buffer;
+  assert(8 == i2c_read_blocking (mpu_6500_i2c_inst, MPU_6500_I2C_ADDRESS, read_buffer,       8, false));
+  last_accelerometer_data.x = (read_buffer[0] << 8) | read_buffer[1];
+  last_accelerometer_data.y = (read_buffer[2] << 8) | read_buffer[3];
+  last_accelerometer_data.z = (read_buffer[4] << 8) | read_buffer[5];
+  last_temperature          = (read_buffer[6] << 8) | read_buffer[7];
 }
 
 void mpu_6500_accelerometer_data(mpu_6500_accelerometer_data_s *accelerometer_data)
