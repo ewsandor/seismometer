@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 
 #include "hardware/i2c.h"
@@ -49,9 +50,13 @@ int main()
     mpu_6500_loop();
     mpu_6500_accelerometer_data_s accelerometer_data;
     mpu_6500_accelerometer_data(&accelerometer_data);
-    printf("i: %06u hz: %u - X: %06d Y: %06d Z: %06d T: %06u\n", 
+    uint acceleration_magnitude = sqrt((accelerometer_data.x*accelerometer_data.x) + 
+                                       (accelerometer_data.y*accelerometer_data.y) + 
+                                       (accelerometer_data.z*accelerometer_data.z));
+
+    printf("i: %06u hz: %u - X: %06d Y: %06d Z: %06d %M: %06u T: %06u\n", 
       i, ((i*1000)/(to_ms_since_boot(now)-loop_start_time)),
-      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, mpu_6500_temperature());
+      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, acceleration_magnitude, mpu_6500_temperature());
     i++;
   }
 
