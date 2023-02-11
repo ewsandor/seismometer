@@ -16,7 +16,8 @@ add_executable( seismometer
 
 # Metadata
 pico_set_program_name(seismometer "Sandor Laboratories Seismometer")
-pico_set_program_description(seismometer "Software for my homemade seismometer")
+pico_set_program_description(seismometer "Embedded software for my homemade seismometer.")
+pico_set_program_version(seismometer "0.0.1-dev")
 pico_set_program_url(seismometer "https://git.sandorlaboratories.com/edward/seismometer/")
 
 # Include directory
