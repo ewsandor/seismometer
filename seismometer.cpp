@@ -2,10 +2,10 @@
 #include <cmath>
 #include <cstdio>
 
-#include "hardware/i2c.h"
-#include "hardware/watchdog.h" 
-#include "pico/binary_info.h"
-#include "pico/stdlib.h"
+#include <hardware/i2c.h>
+#include <hardware/watchdog.h>
+#include <pico/binary_info.h>
+#include <pico/stdlib.h>
 
 #include "mpu-6500.hpp"
 
@@ -34,9 +34,9 @@ int main()
 
   printf("Starting boot.\n");
   watchdog_enable(100, 1);
-  i2c_init(i2c_default, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 200*1000);
+  i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 200*1000);
   watchdog_update();
-  mpu_6500_init(i2c_default);
+  mpu_6500_init(i2c0);
   watchdog_update();
   printf("Boot complete!\n");
   

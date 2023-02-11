@@ -1,7 +1,7 @@
 #ifndef __MPU_6500_HPP__
 #define __MPU_6500_HPP__
 
-#include "hardware/i2c.h"
+#include <hardware/i2c.h>
 
 #include "seismometer_types.hpp"
 
