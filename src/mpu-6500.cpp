@@ -14,7 +14,7 @@ typedef enum
   ACCELEROMETER_16G = 0b11,
 } mpu_6500_acceleration_range_e;
 
-#define BITS_PER_G(acceleration_range) ((1<<15) >> acceleration_range)
+#define BITS_PER_G(acceleration_range) ((1<<14) >> acceleration_range)
 
 enum
 {
