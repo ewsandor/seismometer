@@ -66,22 +66,40 @@ void mpu_6500_init(i2c_inst_t *i2c_inst)
 
   mpu_6500_context.i2c_inst = i2c_inst;
 
+  //Register 107 – Power Management 1
+  //Reset device to default settings
+  write_buffer[0] = 107;
+  write_buffer[1] = (1<<7) /*DEVICE_RESET*/;
+  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  sleep_ms(10);
+  //Register 108 – Power Management 2
+  write_buffer[0] = 108;
+  write_buffer[1] = (0x7) /*DISABLE_X/Y/ZG*/;
+  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  //Register 25 – Sample Rate Divider
+  write_buffer[0] = 25;
+  write_buffer[1] = 3; //SAMPLE_RATE = INTERNAL_SAMPLE_RATE / (1 + SMPLRT_DIV) where INTERNAL_SAMPLE_RATE = 1kHz
+  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 28 – Accelerometer Configuration
   write_buffer[0] = 28;
   write_buffer[1] = (ACCELEROMETER_02G<<3);
   assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 29 – Accelerometer Configuration 2
   write_buffer[0] = 29;
-  write_buffer[1] = (A_DLPF_CFG_460<<0);
+  write_buffer[1] = (A_DLPF_CFG_092<<0);
   assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 35 – FIFO Enable
   write_buffer[0] = 35;
   write_buffer[1] = (1<<7) /*TEMP_OUT*/ | (1<<3) /*ACCEL*/;
-  //assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+// assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  //Register 55 – INT Pin / Bypass Enable Configuration
+  write_buffer[0] = 55;
+  write_buffer[1] = (1<<4) /*INT_ANYRD_2CLEAR*/;
+//  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 56 – Interrupt Enable
   write_buffer[0] = 56;
   write_buffer[1] = (1<<0) /*RAW_RDY_EN*/;
-  //assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+//  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
 }
 
 void mpu_6500_loop()
