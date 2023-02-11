@@ -27,20 +27,24 @@ int main()
 
   printf("Starting boot.\n");
 
-  i2c_init(i2c_default, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
+  i2c_init(i2c_default, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 200*1000);
   mpu_6500_init(i2c_default);
 
   printf("Boot complete!\n");
   
   uint i = 0;
+  absolute_time_t now = get_absolute_time();
+  uint32_t loop_start_time = to_ms_since_boot(now);
   while(1)
   {
+    now = get_absolute_time();
     mpu_6500_loop();
     mpu_6500_accelerometer_data_s accelerometer_data;
     mpu_6500_accelerometer_data(&accelerometer_data);
-    printf("i: %06u - X: %06d Y: %06d Z: %06d T: %06u\n", 
-      i++, accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, mpu_6500_temperature());
-//    sleep_ms(250);
+    printf("i: %06u hz: %u - X: %06d Y: %06d Z: %06d T: %06u\n", 
+      i, ((i*1000)/(to_ms_since_boot(now)-loop_start_time)),
+      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, mpu_6500_temperature());
+    i++;
   }
 
   return 0;
