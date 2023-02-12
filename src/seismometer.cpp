@@ -23,7 +23,8 @@ int main()
 {
   stdio_init_all();
 
-  sleep_ms(5000);
+  printf("Delaying for USB connection...\n");
+  sleep_ms(3000);
     
   if (watchdog_caused_reboot()) 
   {
@@ -37,6 +38,8 @@ int main()
   watchdog_update();
   mpu_6500_init(i2c0);
   watchdog_update();
+//  mpu_6500_calibrate();
+  watchdog_update();
   printf("Boot complete!\n");
   
   uint i = 0;
@@ -46,7 +49,7 @@ int main()
   {
     watchdog_update();
     now = get_absolute_time();
-    mpu_6500_loop();
+    mpu_6500_read();
     mpu_6500_accelerometer_data_s accelerometer_data;
     mpu_6500_accelerometer_data(&accelerometer_data);
     uint acceleration_magnitude = sqrt((accelerometer_data.x*accelerometer_data.x) + 

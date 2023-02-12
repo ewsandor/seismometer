@@ -16,8 +16,10 @@ typedef struct
 typedef uint16_t mpu_6500_temperature_t;
 
 void mpu_6500_init(i2c_inst_t *i2c);
-void mpu_6500_loop();
-void mpu_6500_accelerometer_data(mpu_6500_accelerometer_data_s *accelerometer_data);
+void mpu_6500_calibrate();
+void mpu_6500_read();
+void mpu_6500_accelerometer_data_raw(mpu_6500_accelerometer_data_s *accelerometer_data);
+void mpu_6500_accelerometer_data    (mpu_6500_accelerometer_data_s *accelerometer_data);
 mpu_6500_temperature_t mpu_6500_temperature();
 
 m_celsius_t mpu_6500_temperature_to_m_celsius(mpu_6500_temperature_t);

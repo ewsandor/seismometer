@@ -14,7 +14,7 @@ typedef enum
   ACCELEROMETER_16G = 0b11,
 } mpu_6500_acceleration_range_e;
 
-#define BITS_PER_G(acceleration_range) ((1<<14) >> acceleration_range)
+#define ACCELEROMETER_RAW_1G(acceleration_range) ((1<<14) >> acceleration_range)
 
 enum
 {
@@ -43,6 +43,7 @@ typedef struct
 {
   i2c_inst_t                          *i2c_inst;
   const mpu_6500_acceleration_range_e  acceleration_range;
+  mpu_6500_accelerometer_data_s        accelerometer_offsets;
 
   mpu_6500_accelerometer_data_s        last_accelerometer_data;
   mpu_6500_temperature_t               last_temperature;
@@ -52,6 +53,7 @@ mpu_6500_s mpu_6500_context =
 {
   .i2c_inst                = nullptr, 
   .acceleration_range      = ACCELEROMETER_02G,
+  .accelerometer_offsets   = {0},
   .last_accelerometer_data = {0},
   .last_temperature        = 0
 };
@@ -102,7 +104,16 @@ void mpu_6500_init(i2c_inst_t *i2c_inst)
 //  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
 }
 
-void mpu_6500_loop()
+void mpu_6500_calibrate()
+{
+  mpu_6500_read();
+
+  mpu_6500_context.accelerometer_offsets.x = -mpu_6500_context.last_accelerometer_data.x;
+  mpu_6500_context.accelerometer_offsets.y = -mpu_6500_context.last_accelerometer_data.y;
+  mpu_6500_context.accelerometer_offsets.z = ACCELEROMETER_RAW_1G(mpu_6500_context.acceleration_range)-mpu_6500_context.last_accelerometer_data.z;
+}
+
+void mpu_6500_read()
 {
   uint8_t read_buffer[8];
   uint8_t register_address;
@@ -116,10 +127,19 @@ void mpu_6500_loop()
   mpu_6500_context.last_temperature          = (read_buffer[6] << 8) | read_buffer[7];
 }
 
-void mpu_6500_accelerometer_data(mpu_6500_accelerometer_data_s *accelerometer_data)
+void mpu_6500_accelerometer_data_raw(mpu_6500_accelerometer_data_s *accelerometer_data)
 {
   assert(accelerometer_data != nullptr);
   *accelerometer_data = mpu_6500_context.last_accelerometer_data;
+}
+
+void mpu_6500_accelerometer_data(mpu_6500_accelerometer_data_s *accelerometer_data)
+{
+  assert(accelerometer_data != nullptr);
+  mpu_6500_accelerometer_data_raw(accelerometer_data);
+  accelerometer_data->x += mpu_6500_context.accelerometer_offsets.x;
+  accelerometer_data->y += mpu_6500_context.accelerometer_offsets.y;
+  accelerometer_data->z += mpu_6500_context.accelerometer_offsets.z;
 }
 
 mpu_6500_temperature_t mpu_6500_temperature()
@@ -138,5 +158,5 @@ m_celsius_t mpu_6500_temperature_to_m_celsius(mpu_6500_temperature_t temp_out)
 
 mm_ps2_t mpu_6500_acceleration_to_mm_ps2(mpu_6500_acceleration_t raw_acceleration)
 {
-  return ((mm_ps2_t)raw_acceleration*9800)/BITS_PER_G(mpu_6500_context.acceleration_range);
+  return ((mm_ps2_t)raw_acceleration*9800)/ACCELEROMETER_RAW_1G(mpu_6500_context.acceleration_range);
 }
