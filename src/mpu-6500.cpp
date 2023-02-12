@@ -49,7 +49,7 @@ typedef struct
   mpu_6500_temperature_t               last_temperature;
 } mpu_6500_s;
 
-mpu_6500_s mpu_6500_context = 
+static mpu_6500_s mpu_6500_context = 
 {
   .i2c_inst                = nullptr, 
   .acceleration_range      = ACCELEROMETER_02G,

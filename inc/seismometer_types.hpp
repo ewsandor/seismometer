@@ -1,6 +1,8 @@
 #ifndef __SEISMOMETER_TYPES_HPP__
 #define __SEISMOMETER_TYPES_HPP__
 
+#include <pico/time.h>
+
 /* Temperature in milli-Celsius */
 typedef int m_celsius_t;
 
@@ -17,23 +19,26 @@ typedef struct
 
 typedef enum
 {
-  SEISOMETER_SAMPLE_TYPE_INVALID,
-  SEISOMETER_SAMPLE_TYPE_ACCELERATION,
-  SEISOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE,
+  SEISMOMETER_SAMPLE_TYPE_INVALID,
+  SEISMOMETER_SAMPLE_TYPE_ACCELERATION,
+  SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE,
+} seismometer_sample_type_e;
 
-} seisometer_sample_type_e;
+typedef uint sample_index_t;
 
 typedef struct
 {
-  seisometer_sample_type_e type;
+  seismometer_sample_type_e type;
+  sample_index_t            index;
+  absolute_time_t           time;
 
   union 
   {
-    m_celsius_t           temperature;
-    acceleration_sample_s acceleration;
+    m_celsius_t             temperature;
+    acceleration_sample_s   acceleration;
   };
 
-} seisometer_sample_s;
+} seismometer_sample_s;
 
 
 #endif /*__SEISMOMETER_TYPES_HPP__*/

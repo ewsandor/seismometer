@@ -13,6 +13,7 @@ pico_sdk_init()
 add_executable( 
                 seismometer
                 src/mpu-6500.cpp
+                src/sample_handler.cpp
                 src/sampler.cpp
                 src/seismometer.cpp
               )

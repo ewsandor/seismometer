@@ -9,6 +9,7 @@
 #include <pico/stdlib.h>
 
 #include "mpu-6500.hpp"
+#include "sample_handler.hpp"
 #include "sampler.hpp"
 #include "seismometer_config.hpp"
 #include "seismometer_utils.hpp"
@@ -23,13 +24,14 @@ void i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
   gpio_pull_up(scl_pin);
 }
 
-sample_thread_args_s sampler_thead_args = {0};
+static sample_thread_args_s sampler_thead_args = {0};
+static queue_t              sample_queue       = {0};
 
 void init()
 {
   stdio_init_all();
   printf("Delaying for USB connection...\n");
-  sleep_ms(3000);
+  sleep_ms(TIME_S_TO_MS(5));
 }
 
 void boot()
@@ -48,11 +50,15 @@ void boot()
   watchdog_update();
 //  mpu_6500_calibrate();
   watchdog_update();
+  printf("Initializing sample queue\n");
+  queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISOMETER_SAMPLE_QUEUE_SIZE);
+  watchdog_update();
   printf("Starting sampler thread.\n");
+  sampler_thead_args.sample_queue = &sample_queue;
   sampler_thread_pass_args(&sampler_thead_args);
   multicore_launch_core1(sampler_thread_main);
-  printf("Boot complete!\n");
   watchdog_update();
+  printf("Boot complete!\n");
 }
 
 int main() 
@@ -64,23 +70,17 @@ int main()
 
   uint i = 0;
   absolute_time_t now = get_absolute_time();
+  set_sample_handler_epoch(&now);
   uint32_t loop_start_time = to_ms_since_boot(now);
   while(1)
   {
     watchdog_update();
+    
+    seismometer_sample_s sample;
+    queue_remove_blocking(&sample_queue, &sample);
     now = get_absolute_time();
-    mpu_6500_accelerometer_data_s accelerometer_data;
-    mpu_6500_accelerometer_data(&accelerometer_data);
-    uint acceleration_magnitude = sqrt((accelerometer_data.x*accelerometer_data.x) + 
-                                       (accelerometer_data.y*accelerometer_data.y) + 
-                                       (accelerometer_data.z*accelerometer_data.z));
-    m_celsius_t temperature = mpu_6500_temperature_to_m_celsius(mpu_6500_temperature());
 
-    printf("i: % 6u hz: %u - X: % 6d Y: % 6d Z: % 6d %M: % 6u T: % 2d.%03u\n", 
-      i, ((i*1000)/(to_ms_since_boot(now)-loop_start_time)),
-      accelerometer_data.x, accelerometer_data.y, accelerometer_data.z, 
-      mpu_6500_acceleration_to_mm_ps2(acceleration_magnitude), temperature/1000, temperature%1000);
-    i++;
+    sample_handler(&sample);
   }
 
   return 0;
