@@ -4,6 +4,21 @@
 
 #include "sample_handler.hpp"
 
+typedef enum
+{
+  SAMPLE_LOG_INVALID,
+  SAMPLE_LOG_ACCEL_X,
+  SAMPLE_LOG_ACCEL_Y,
+  SAMPLE_LOG_ACCEL_Z,
+  SAMPLE_LOG_ACCEL_MAGNITUDE,
+  SAMPLE_LOG_ACCEL_TEMP,
+} sample_log_key_e;
+
+static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
+{
+  printf("SAMPLE|%02x|%08x|%016llx|%016llx\n", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
+}
+
 static absolute_time_t epoch = {0};
 void set_sample_handler_epoch(absolute_time_t time)
 {
@@ -34,6 +49,11 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
                                           (sample->acceleration.y*sample->acceleration.y) + 
                                           (sample->acceleration.z*sample->acceleration.z) );
 
+  log_sample(SAMPLE_LOG_ACCEL_X,         sample->index, &sample->time, sample->acceleration.x);
+  log_sample(SAMPLE_LOG_ACCEL_Y,         sample->index, &sample->time, sample->acceleration.y);
+  log_sample(SAMPLE_LOG_ACCEL_Z,         sample->index, &sample->time, sample->acceleration.z);
+  log_sample(SAMPLE_LOG_ACCEL_MAGNITUDE, sample->index, &sample->time, acceleration_magnitude);
+
   printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
@@ -57,6 +77,8 @@ static void accelerometer_teperature_sample_handler(const seismometer_sample_s *
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
     ((double)sample->temperature)/1000);
+
+  log_sample(SAMPLE_LOG_ACCEL_TEMP, sample->index, &sample->time, sample->temperature);
 
   last_sample_time = sample->time;
 }
