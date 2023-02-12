@@ -34,7 +34,7 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
                                           (sample->acceleration.y*sample->acceleration.y) + 
                                           (sample->acceleration.z*sample->acceleration.z) );
 
-  printf("i: % 6u hz: % 3.3f mean hz: % 3.3f - X: % 2.3f Y: % 2.3f Z: % 2.3f %M: % 2.3f\n", 
+  printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
@@ -52,7 +52,7 @@ static void accelerometer_teperature_sample_handler(const seismometer_sample_s *
   assert(SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE == sample->type);
   static absolute_time_t last_sample_time = {0};
 
-  printf("i: % 6u hz: % 3.3f mean hz: % 3.3f - : % 2.3f\n", 
+  printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3f\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
