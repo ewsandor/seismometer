@@ -69,7 +69,6 @@ int main()
   {
     watchdog_update();
     now = get_absolute_time();
-    mpu_6500_read();
     mpu_6500_accelerometer_data_s accelerometer_data;
     mpu_6500_accelerometer_data(&accelerometer_data);
     uint acceleration_magnitude = sqrt((accelerometer_data.x*accelerometer_data.x) + 

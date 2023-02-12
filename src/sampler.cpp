@@ -4,6 +4,7 @@
 #include <pico/stdlib.h>
 #include <pico/sync.h>
 
+#include "mpu-6500.hpp"
 #include "sampler.hpp"
 
 sample_thread_args_s * args_ptr = nullptr;
@@ -35,5 +36,7 @@ void sampler_thread_main()
   {
     sem_acquire_blocking(&sample_semaphore);
     printf("Sample!\n");
+    mpu_6500_read();
+
   }
 }
