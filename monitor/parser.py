@@ -1,3 +1,5 @@
+from sample_database import push_sample
+
 def twos_complement(hexstr, bits):
     value = int(hexstr, 16)
     if value & (1 << (bits - 1)):
@@ -13,5 +15,4 @@ def parse_seismometer_line(line):
       'timestamp': int(line_split[3],16),
       'data'     : twos_complement(line_split[4],64),
     }
-    print(line)
-    print(sample)
+    push_sample(sample)

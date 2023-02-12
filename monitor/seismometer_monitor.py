@@ -4,7 +4,10 @@ import getopt
 import serial
 import sys
 
+import matplotlib.pyplot as plt
+
 from parser import parse_seismometer_line
+from sample_database import get_sample_array
 
 program_name_str="Sandor Laboratories Seismometer Monitor"
 version_str="0.0.1-dev"
@@ -51,9 +54,22 @@ def main(argv) -> int:
           serial_path = arg
 
   with serial.Serial(serial_path, serial_baud, timeout=1) as ser:
-    while 1:
+    for i in range(0,5000):
       line = ser.readline().decode('utf-8').strip()
       parse_seismometer_line(line)
+    
+  sample_deque = get_sample_array(1)
+  samples = [0] * len(sample_deque)
+  i = 0
+  for sample in sample_deque:
+    if i < len(samples):
+      samples[i] = sample['data']
+    else:
+      break
+    i = i+1
+
+  plt.plot(samples)
+  plt.show()
 
   return 0
 
