@@ -7,7 +7,7 @@ import sys
 import matplotlib.pyplot as plt
 
 from parser import parse_seismometer_line
-from sample_database import get_sample_array
+from sample_database import set_max_database_length, get_sample_array
 
 program_name_str="Sandor Laboratories Seismometer Monitor"
 version_str="0.0.1-dev"
@@ -28,6 +28,8 @@ def main(argv) -> int:
   serial_path=default_serial_path
   default_serial_baud=115200
   serial_baud=default_serial_baud
+  default_sample_buffer_length=10000
+  sample_buffer_length=default_sample_buffer_length
 
   help_string=title_block_str + "\n\n" \
               "This script monitors, analyzes, and visualizes data from the seismometer data collector.\n\n" \
@@ -53,8 +55,10 @@ def main(argv) -> int:
       elif opt in ('-s', "--serial"): 
           serial_path = arg
 
+  set_max_database_length(sample_buffer_length)
+
   with serial.Serial(serial_path, serial_baud, timeout=1) as ser:
-    for i in range(0,5000):
+    for i in range(0,10000):
       line = ser.readline().decode('utf-8').strip()
       parse_seismometer_line(line)
     
