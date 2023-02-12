@@ -68,18 +68,12 @@ int main()
 
   watchdog_update();
 
-  uint i = 0;
-  absolute_time_t now = get_absolute_time();
-  set_sample_handler_epoch(&now);
-  uint32_t loop_start_time = to_ms_since_boot(now);
+  set_sample_handler_epoch(get_absolute_time());
   while(1)
   {
     watchdog_update();
-    
     seismometer_sample_s sample;
     queue_remove_blocking(&sample_queue, &sample);
-    now = get_absolute_time();
-
     sample_handler(&sample);
   }
 

@@ -3,7 +3,7 @@
 
 #include "seismometer_types.hpp"
 
-void set_sample_handler_epoch(const absolute_time_t *time);
+void set_sample_handler_epoch(absolute_time_t time);
 void sample_handler          (const seismometer_sample_s *sample);
 
 #endif /*__SAMPLE_HANDLER_HPP__*/

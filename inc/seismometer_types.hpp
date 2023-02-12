@@ -3,6 +3,9 @@
 
 #include <pico/time.h>
 
+/* Frequency in milli-Hz */
+typedef uint m_hz_t;
+
 /* Temperature in milli-Celsius */
 typedef int m_celsius_t;
 
