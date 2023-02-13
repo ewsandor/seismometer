@@ -7,7 +7,7 @@ import sys
 import matplotlib.pyplot as plt
 
 from parser import parse_seismometer_line
-from sample_database import set_max_database_length, get_sample_array
+from sample_database import set_max_database_length, get_sample_data_array
 
 program_name_str="Sandor Laboratories Seismometer Monitor"
 version_str="0.0.1-dev"
@@ -62,16 +62,7 @@ def main(argv) -> int:
       line = ser.readline().decode('utf-8').strip()
       parse_seismometer_line(line)
     
-  sample_deque = get_sample_array(1)
-  samples = [0] * len(sample_deque)
-  i = 0
-  for sample in sample_deque:
-    if i < len(samples):
-      samples[i] = sample['data']
-    else:
-      break
-    i = i+1
-
+  samples = get_sample_data_array(1)
   plt.plot(samples)
   plt.show()
 
