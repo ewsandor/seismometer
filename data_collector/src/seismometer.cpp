@@ -29,7 +29,8 @@ static queue_t              sample_queue       = {0};
 
 void init()
 {
-  stdio_init_all();
+  //stdio_init_all();
+  stdio_uart_init_full(PICO_DEFAULT_UART_INSTANCE, 921600, PICO_DEFAULT_UART_TX_PIN, PICO_DEFAULT_UART_RX_PIN); 	
 //  printf("Delaying for USB connection...\n");
 //  sleep_ms(TIME_S_TO_MS(5));
 }
@@ -38,7 +39,10 @@ void boot()
 {
   if (watchdog_caused_reboot()) 
   {
-    printf("Rebooted by Watchdog!\n");
+    printf("\n\n\n"
+          "##################################################"
+          "##################################################\n"
+          "Rebooted by Watchdog!\n");
   } 
   printf("Starting boot.\n");
   printf("Enabling %u ms watchdog.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
@@ -71,8 +75,9 @@ int main()
   set_sample_handler_epoch(get_absolute_time());
   while(1)
   {
-    watchdog_update();
     seismometer_sample_s sample;
+    printf("Queue length %u\n", queue_get_level(&sample_queue));
+    watchdog_update();
     queue_remove_blocking(&sample_queue, &sample);
     sample_handler(&sample);
   }
