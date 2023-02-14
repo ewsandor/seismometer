@@ -29,10 +29,14 @@ static queue_t              sample_queue       = {0};
 
 void init()
 {
-  //stdio_init_all();
-  stdio_uart_init_full(PICO_DEFAULT_UART_INSTANCE, 921600, PICO_DEFAULT_UART_TX_PIN, PICO_DEFAULT_UART_RX_PIN); 	
-//  printf("Delaying for USB connection...\n");
-//  sleep_ms(TIME_S_TO_MS(5));
+  stdio_init_all();
+  #ifdef LIB_PICO_STDIO_UART
+  uart_set_baudrate(uart_default, 921600);
+  #endif
+  #ifdef LIB_PICO_STDIO_USB
+  printf("Delaying for USB connection...\n");
+  sleep_ms(TIME_S_TO_MS(5));
+  #endif
 }
 
 void boot()
