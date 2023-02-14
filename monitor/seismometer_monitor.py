@@ -19,7 +19,7 @@ website_str="https://git.sandorlaboratories.com/edward/seismometer"
 
 default_serial_path="/dev/ttyACM0"
 serial_path=default_serial_path
-default_serial_baud=115200
+default_serial_baud=921600
 serial_baud=default_serial_baud
 default_max_database_length=500000
 max_database_length=default_max_database_length
@@ -36,6 +36,7 @@ database = sample_database(max_database_length)
 
 def serial_thread(args):
   #Open Serial Port
+  print("Opening serial port at '" + str(serial_path + "' with baud '" + str(serial_baud) + "'."))
   while(True):
     try:
       with serial.Serial(serial_path, serial_baud, timeout=1) as ser:
@@ -64,7 +65,7 @@ def main(argv) -> int:
 
   #Parse command line arguments
   try:
-      opts, args = getopt.getopt(argv,"hs:",["help", "serial=",])
+      opts, args = getopt.getopt(argv,"b:hs:",["baud=", "help", "serial=",])
   except getopt.GetoptError as err:
       print(err)
       print("\n"+help_string)
@@ -72,7 +73,7 @@ def main(argv) -> int:
 
   for opt, arg in opts:
       if opt in ('-b', "--baud"): 
-          serial_baud = int(baud)
+          serial_baud = int(arg)
       elif opt in ('-h', "--help"): 
           print(help_string)
           sys.exit()
