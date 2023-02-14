@@ -30,8 +30,8 @@ static queue_t              sample_queue       = {0};
 void init()
 {
   stdio_init_all();
-  printf("Delaying for USB connection...\n");
-  sleep_ms(TIME_S_TO_MS(5));
+//  printf("Delaying for USB connection...\n");
+//  sleep_ms(TIME_S_TO_MS(5));
 }
 
 void boot()
@@ -41,8 +41,8 @@ void boot()
     printf("Rebooted by Watchdog!\n");
   } 
   printf("Starting boot.\n");
-  printf("Enabling %u ms watchdog.\n", TIME_US_TO_MS(SEISOMETER_WATCHDOG_PERIOD_US));
-  watchdog_enable(TIME_US_TO_MS(SEISOMETER_WATCHDOG_PERIOD_US), 1);
+  printf("Enabling %u ms watchdog.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
+  watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
@@ -51,7 +51,7 @@ void boot()
 //  mpu_6500_calibrate();
   watchdog_update();
   printf("Initializing sample queue\n");
-  queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISOMETER_SAMPLE_QUEUE_SIZE);
+  queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISMOMETER_SAMPLE_QUEUE_SIZE);
   watchdog_update();
   printf("Starting sampler thread.\n");
   sampler_thead_args.sample_queue = &sample_queue;

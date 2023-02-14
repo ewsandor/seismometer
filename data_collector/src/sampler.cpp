@@ -55,7 +55,7 @@ void sampler_thread_main()
   sem_init(&sample_semaphore, 0, 1);
 
   printf("Starting sample timer.\n");
-  assert(add_repeating_timer_us(-SEISOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_semaphore, &sample_timer));
+  assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_semaphore, &sample_timer));
 
   sample_index_t sample_index = 0;
   while (1)

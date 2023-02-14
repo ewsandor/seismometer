@@ -34,5 +34,5 @@ target_link_libraries(seismometer pico_multicore pico_stdlib hardware_i2c)
 pico_add_extra_outputs(seismometer)
 
 # STDIO control
-pico_enable_stdio_usb (seismometer 1)
-pico_enable_stdio_uart(seismometer 0)
+pico_enable_stdio_usb (seismometer 0)
+pico_enable_stdio_uart(seismometer 1)
