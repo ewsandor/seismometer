@@ -28,6 +28,7 @@ Fs=100;
 Ts=1/Fs;
 cutoff_f=10;
 integer_scale=1000;
+hpf=0;
 
 N=64;
 n=0:N-1;
@@ -35,6 +36,11 @@ t=n*Ts;
 f=n*Fs/N;
 
 output_filter=sinc((cutoff_f*2/Fs)*(n-N/2))*(cutoff_f*2);
+if(hpf > 0)
+  for i = 1:N
+    output_filter(i)=output_filter(i)*(-1).^i;
+  end
+end
 #plot(abs(fft(output_filter)))
 #window=ones(1,N); # Rectangle window
 window=hamming(N)';
