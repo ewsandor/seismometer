@@ -1,5 +1,6 @@
 clear;
 clc;
+close all;
 pkg load signal;
 
 function window = hamming_window(N,a_0=25/46)
@@ -26,6 +27,7 @@ end
 Fs=100;
 Ts=1/Fs;
 cutoff_f=10;
+integer_scale=1000;
 
 N=64;
 n=0:N-1;
@@ -34,9 +36,17 @@ f=n*Fs/N;
 
 output_filter=sinc((cutoff_f*2/Fs)*(n-N/2))*(cutoff_f*2);
 #plot(abs(fft(output_filter)))
-
-window=ones(1,N);
+#window=ones(1,N); # Rectangle window
 window=hamming(N)';
 #window=blackman(N)';
 output_filter=output_filter.*window;
-freqz(output_filter, fs=Fs);
+#freqz(output_filter, fs=Fs);
+output_filter_int = round(output_filter*integer_scale);
+freqz(output_filter_int/integer_scale, fs=Fs);
+for i = 1:N
+  if(mod(i,8)==1)
+    printf("\n");
+  end
+  printf("%8d, ",output_filter_int(i));
+end
+printf("\n");
