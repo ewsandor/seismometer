@@ -10,12 +10,15 @@ class fir_filter_c
   private:
     const filter_order_t        order;
     const filter_coefficient_t *coefficient;
+    const filter_sample_t       gain_numerator;
+    const filter_sample_t       gain_denominator;
     filter_sample_t            *circular_buffer = nullptr;
     unsigned int                next_write=0;
     filter_sample_t             filtered_sample=0;
 
   public:
-    fir_filter_c(filter_order_t order, const filter_coefficient_t *coefficient);
+    fir_filter_c( filter_order_t order, const filter_coefficient_t *coefficient, 
+                  filter_sample_t gain_numerator=1, filter_sample_t gain_denominator=1 );
     ~fir_filter_c();
 
     void                   push_sample(filter_sample_t sample);

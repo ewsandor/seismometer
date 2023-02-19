@@ -44,9 +44,9 @@ void set_sample_handler_epoch(absolute_time_t time)
   return (((uint64_t)sample_count*1000*1000)/delta);
 }
 
-fir_filter_c acceleration_filter_x(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff);
-fir_filter_c acceleration_filter_y(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff);
-fir_filter_c acceleration_filter_z(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff);
+fir_filter_c acceleration_filter_x(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
+fir_filter_c acceleration_filter_y(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
+fir_filter_c acceleration_filter_z(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
 static void acceleration_sample_handler(const seismometer_sample_s *sample)
 {
   assert(sample != nullptr);
@@ -66,8 +66,8 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
   log_sample(SAMPLE_LOG_ACCEL_Z,          sample->index, &sample->time, sample->acceleration.z);
   log_sample(SAMPLE_LOG_ACCEL_MAGNITUDE,  sample->index, &sample->time, acceleration_magnitude);
   log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_x.get_filtered_sample());
-  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_y.get_filtered_sample());
-  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample());
+  log_sample(SAMPLE_LOG_ACCEL_Y_FILTERED, sample->index, &sample->time, acceleration_filter_y.get_filtered_sample());
+  log_sample(SAMPLE_LOG_ACCEL_Z_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample());
 
   printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
