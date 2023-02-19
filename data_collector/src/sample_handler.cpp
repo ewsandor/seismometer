@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdio>
 
+#include "filter_coefficients.hpp"
+#include "fir_filter.hpp"
 #include "sample_handler.hpp"
 
 typedef enum
@@ -12,6 +14,9 @@ typedef enum
   SAMPLE_LOG_ACCEL_Z,
   SAMPLE_LOG_ACCEL_MAGNITUDE,
   SAMPLE_LOG_ACCEL_TEMP,
+  SAMPLE_LOG_ACCEL_X_FILTERED,
+  SAMPLE_LOG_ACCEL_Y_FILTERED,
+  SAMPLE_LOG_ACCEL_Z_FILTERED,
 } sample_log_key_e;
 
 static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
@@ -39,20 +44,30 @@ void set_sample_handler_epoch(absolute_time_t time)
   return (((uint64_t)sample_count*1000*1000)/delta);
 }
 
+fir_filter_c acceleration_filter_x(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff);
+fir_filter_c acceleration_filter_y(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff);
+fir_filter_c acceleration_filter_z(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff);
 static void acceleration_sample_handler(const seismometer_sample_s *sample)
 {
   assert(sample != nullptr);
   assert(SEISMOMETER_SAMPLE_TYPE_ACCELERATION == sample->type);
+
+  acceleration_filter_x.push_sample(sample->acceleration.x);
+  acceleration_filter_y.push_sample(sample->acceleration.y);
+  acceleration_filter_z.push_sample(sample->acceleration.z);
 
   static absolute_time_t last_sample_time = {0};
   mm_ps2_t acceleration_magnitude = sqrt( (sample->acceleration.x*sample->acceleration.x) + 
                                           (sample->acceleration.y*sample->acceleration.y) + 
                                           (sample->acceleration.z*sample->acceleration.z) );
 
-  log_sample(SAMPLE_LOG_ACCEL_X,         sample->index, &sample->time, sample->acceleration.x);
-  log_sample(SAMPLE_LOG_ACCEL_Y,         sample->index, &sample->time, sample->acceleration.y);
-  log_sample(SAMPLE_LOG_ACCEL_Z,         sample->index, &sample->time, sample->acceleration.z);
-  log_sample(SAMPLE_LOG_ACCEL_MAGNITUDE, sample->index, &sample->time, acceleration_magnitude);
+  log_sample(SAMPLE_LOG_ACCEL_X,          sample->index, &sample->time, sample->acceleration.x);
+  log_sample(SAMPLE_LOG_ACCEL_Y,          sample->index, &sample->time, sample->acceleration.y);
+  log_sample(SAMPLE_LOG_ACCEL_Z,          sample->index, &sample->time, sample->acceleration.z);
+  log_sample(SAMPLE_LOG_ACCEL_MAGNITUDE,  sample->index, &sample->time, acceleration_magnitude);
+  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_x.get_filtered_sample());
+  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_y.get_filtered_sample());
+  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample());
 
   printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
