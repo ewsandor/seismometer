@@ -45,10 +45,18 @@ void set_sample_handler_epoch(absolute_time_t time)
   return (((uint64_t)sample_count*1000*1000)/delta);
 }
 
-fir_filter_c acceleration_filter_x(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
-fir_filter_c acceleration_filter_y(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
-fir_filter_c acceleration_filter_z(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
-fir_filter_c acceleration_filter_m(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM, FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN);
+const fir_filter_config_s acceleration_fir_filter_config
+{
+  .remove_dc_offset = 256,
+  .gain_numerator   = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM,
+  .gain_denominator = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN,
+};
+
+fir_filter_c acceleration_filter_x(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &acceleration_fir_filter_config);
+fir_filter_c acceleration_filter_y(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &acceleration_fir_filter_config);
+fir_filter_c acceleration_filter_z(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &acceleration_fir_filter_config);
+fir_filter_c acceleration_filter_m(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &acceleration_fir_filter_config);
+
 static void acceleration_sample_handler(const seismometer_sample_s *sample)
 {
   assert(sample != nullptr);

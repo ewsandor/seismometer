@@ -2,15 +2,32 @@
 #include <cstdlib>
 
 #include "fir_filter.hpp"
+#include "seismometer_utils.hpp"
 
-fir_filter_c::fir_filter_c( filter_order_t order_init, const filter_coefficient_t *coefficient_init, 
-                            filter_sample_t gain_numerator_init, filter_sample_t gain_denominator_init )
-  : order(order_init), coefficient(coefficient_init), gain_numerator(gain_numerator_init), gain_denominator(gain_denominator_init)
+#define INCREMENT_CIRCULAR_BUFFER_ITERATOR(iterator, buffer_size) \
+  ((((iterator)+1) < (buffer_size))?((iterator)+1):(0)) /* If iterator exceeds buffer size, reset to 0 */
+#define CIRCULAR_BUFFER_OFFSET_NEG(index, buffer_size, offset) \
+  (((offset) <= (index))?((index)-(offset)):((index)+(buffer_size)-(offset)))
+#define CIRCULAR_BUFFER_OFFSET_POS(index, buffer_size, offset) \
+  ((((index)+(offset)) < (buffer_size))?((index)+(offset)):((index)+(offset)-(buffer_size)))
+
+const fir_filter_config_s default_fir_filter_config
 {
+  .remove_dc_offset = 0,
+  .gain_numerator   = 1,
+  .gain_denominator = 1,
+};
+
+fir_filter_c::fir_filter_c( filter_order_t order_init, const filter_coefficient_t *coefficient_init, const fir_filter_config_s *config_init)
+  : order(order_init), coefficient(coefficient_init), config(*config_init), 
+    circular_buffer_size(SEISMOMETER_MAX(order_init, config_init->remove_dc_offset))
+{
+  assert(config_init != nullptr);
   assert(coefficient != nullptr);
   assert(order > 0);
-  assert(gain_denominator != 0);
-  circular_buffer = (filter_sample_t*) calloc(sizeof(filter_sample_t), order);
+  assert(config.gain_denominator != 0);
+  assert(circular_buffer_size > 0);
+  circular_buffer = (filter_sample_t*) calloc(sizeof(filter_sample_t), circular_buffer_size);
   assert(circular_buffer != nullptr);
 }
 fir_filter_c::~fir_filter_c()
@@ -20,15 +37,27 @@ fir_filter_c::~fir_filter_c()
 
 void fir_filter_c::push_sample(filter_sample_t sample)
 {
+  if(config.remove_dc_offset > 0)
+  {
+    moving_average_sum -= circular_buffer[CIRCULAR_BUFFER_OFFSET_NEG(next_write, circular_buffer_size, config.remove_dc_offset)];
+    moving_average_sum += sample;
+  }
   circular_buffer[next_write]=sample;
-  next_write = (next_write+1)%order;
-
+  next_write = INCREMENT_CIRCULAR_BUFFER_ITERATOR(next_write, circular_buffer_size);
+ 
   filter_order_t i = 0;
   filtered_sample = 0;
+  filter_order_t iterator = CIRCULAR_BUFFER_OFFSET_NEG(next_write, circular_buffer_size, order-1);
   for(i = 0; i < order; i++)
   {
-    filtered_sample+=coefficient[i]*circular_buffer[(next_write+i)%order];
+    filtered_sample+=coefficient[i]*circular_buffer[iterator];
+    iterator = INCREMENT_CIRCULAR_BUFFER_ITERATOR(iterator, circular_buffer_size);
   }
-  filtered_sample*=gain_numerator;
-  filtered_sample/=gain_denominator;
+  filtered_sample*=config.gain_numerator;
+  filtered_sample/=config.gain_denominator;
+
+  if(config.remove_dc_offset > 0)
+  {
+    filtered_sample -= (moving_average_sum/((filter_sample_t)config.remove_dc_offset));
+  }
 }
