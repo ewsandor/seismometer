@@ -11,5 +11,6 @@
 #define TIME_US_TO_S(time_us)  (TIME_US_TO_MS(time_us)/1000)
 
 #define SEISMOMETER_MAX(a,b)   MAX(a, b)
+#define SEISMOMETER_MIN(a,b)   MIN(a, b)
 
 #endif /*__SEISMOMETER_UTILS_HPP__*/

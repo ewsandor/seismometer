@@ -41,6 +41,10 @@ void fir_filter_c::push_sample(filter_sample_t sample)
   {
     moving_average_sum -= circular_buffer[CIRCULAR_BUFFER_OFFSET_NEG(next_write, circular_buffer_size, config.remove_dc_offset)];
     moving_average_sum += sample;
+    if(moving_average_history < config.remove_dc_offset)
+    {
+      moving_average_history++;
+    }
   }
   circular_buffer[next_write]=sample;
   next_write = INCREMENT_CIRCULAR_BUFFER_ITERATOR(next_write, circular_buffer_size);
@@ -56,8 +60,9 @@ void fir_filter_c::push_sample(filter_sample_t sample)
   filtered_sample*=config.gain_numerator;
   filtered_sample/=config.gain_denominator;
 
-  if(config.remove_dc_offset > 0)
+  if(moving_average_history > 0)
   {
-    filtered_sample -= (moving_average_sum/((filter_sample_t)config.remove_dc_offset));
+    moving_average   = (moving_average_sum/((filter_sample_t)moving_average_history));
+    filtered_sample -= moving_average;
   }
 }
