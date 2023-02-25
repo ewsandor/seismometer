@@ -13,14 +13,14 @@
 
 const fir_filter_config_s default_fir_filter_config
 {
-  .remove_dc_offset = 0,
+  .moving_average_order = 0,
   .gain_numerator   = 1,
   .gain_denominator = 1,
 };
 
 fir_filter_c::fir_filter_c( filter_order_t order_init, const filter_coefficient_t *coefficient_init, const fir_filter_config_s *config_init)
   : order(order_init), coefficient(coefficient_init), config(*config_init), 
-    circular_buffer_size(SEISMOMETER_MAX(order_init, config_init->remove_dc_offset))
+    circular_buffer_size(SEISMOMETER_MAX(order_init, config_init->moving_average_order))
 {
   assert(config_init != nullptr);
   assert(coefficient != nullptr);
@@ -37,11 +37,11 @@ fir_filter_c::~fir_filter_c()
 
 void fir_filter_c::push_sample(filter_sample_t sample)
 {
-  if(config.remove_dc_offset > 0)
+  if(config.moving_average_order > 0)
   {
-    moving_average_sum -= circular_buffer[CIRCULAR_BUFFER_OFFSET_NEG(next_write, circular_buffer_size, config.remove_dc_offset)];
+    moving_average_sum -= circular_buffer[CIRCULAR_BUFFER_OFFSET_NEG(next_write, circular_buffer_size, config.moving_average_order)];
     moving_average_sum += sample;
-    if(moving_average_history < config.remove_dc_offset)
+    if(moving_average_history < config.moving_average_order)
     {
       moving_average_history++;
     }
@@ -54,8 +54,8 @@ void fir_filter_c::push_sample(filter_sample_t sample)
   filter_order_t iterator = CIRCULAR_BUFFER_OFFSET_NEG(next_write, circular_buffer_size, order-1);
   for(i = 0; i < order; i++)
   {
-    filtered_sample+=coefficient[i]*circular_buffer[iterator];
-    iterator = INCREMENT_CIRCULAR_BUFFER_ITERATOR(iterator, circular_buffer_size);
+    filtered_sample += coefficient[i]*circular_buffer[iterator];
+    iterator         = INCREMENT_CIRCULAR_BUFFER_ITERATOR(iterator, circular_buffer_size);
   }
   filtered_sample*=config.gain_numerator;
   filtered_sample/=config.gain_denominator;
@@ -63,6 +63,5 @@ void fir_filter_c::push_sample(filter_sample_t sample)
   if(moving_average_history > 0)
   {
     moving_average   = (moving_average_sum/((filter_sample_t)moving_average_history));
-    filtered_sample -= moving_average;
   }
 }

@@ -47,7 +47,7 @@ void set_sample_handler_epoch(absolute_time_t time)
 
 const fir_filter_config_s acceleration_fir_filter_config
 {
-  .remove_dc_offset = 256,
+  .moving_average_order = 256,
   .gain_numerator   = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM,
   .gain_denominator = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN,
 };
@@ -76,10 +76,10 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
   log_sample(SAMPLE_LOG_ACCEL_Y,          sample->index, &sample->time, sample->acceleration.y);
   log_sample(SAMPLE_LOG_ACCEL_Z,          sample->index, &sample->time, sample->acceleration.z);
   log_sample(SAMPLE_LOG_ACCEL_M,          sample->index, &sample->time, acceleration_magnitude);
-  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_x.get_filtered_sample());
-  log_sample(SAMPLE_LOG_ACCEL_Y_FILTERED, sample->index, &sample->time, acceleration_filter_y.get_filtered_sample());
-  log_sample(SAMPLE_LOG_ACCEL_Z_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample());
-  log_sample(SAMPLE_LOG_ACCEL_M_FILTERED, sample->index, &sample->time, acceleration_filter_m.get_filtered_sample());
+  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_x.get_filtered_sample_dc_offset_removed());
+  log_sample(SAMPLE_LOG_ACCEL_Y_FILTERED, sample->index, &sample->time, acceleration_filter_y.get_filtered_sample_dc_offset_removed());
+  log_sample(SAMPLE_LOG_ACCEL_Z_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample_dc_offset_removed());
+  log_sample(SAMPLE_LOG_ACCEL_M_FILTERED, sample->index, &sample->time, acceleration_filter_m.get_filtered_sample_dc_offset_removed());
 
   printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
@@ -93,7 +93,7 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
   last_sample_time = sample->time;
 }
 
-static void accelerometer_teperature_sample_handler(const seismometer_sample_s *sample)
+static void accelerometer_temperature_sample_handler(const seismometer_sample_s *sample)
 {
   assert(sample != nullptr);
   assert(SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE == sample->type);
@@ -123,7 +123,7 @@ void sample_handler(const seismometer_sample_s *sample)
     }
     case SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE:
     {
-      accelerometer_teperature_sample_handler(sample);
+      accelerometer_temperature_sample_handler(sample);
       break;
     }
     default:

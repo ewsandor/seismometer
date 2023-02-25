@@ -10,9 +10,9 @@ typedef size_t       filter_order_t;
 
 typedef struct
 {
-  filter_order_t  remove_dc_offset; /* Order to remove DC offset via moving average.  Order 0 disables this logic */
-  filter_sample_t gain_numerator;   /* Constant gain to multiply filter output by */
-  filter_sample_t gain_denominator; /* Constant gain to divide filter output by */
+  filter_order_t  moving_average_order; /* Order to remove DC offset via moving average.  Order 0 disables this logic */
+  filter_sample_t gain_numerator;       /* Constant gain to multiply filter output by */
+  filter_sample_t gain_denominator;     /* Constant gain to divide filter output by */
 } fir_filter_config_s;
 extern const fir_filter_config_s default_fir_filter_config;
 
@@ -39,9 +39,14 @@ class fir_filter_c
     fir_filter_c( filter_order_t order, const filter_coefficient_t *coefficient, const fir_filter_config_s *config = &default_fir_filter_config);
     ~fir_filter_c();
 
+    /* Push incoming raw sample and compute new filtered sample */
     void                   push_sample(filter_sample_t sample);
-    inline filter_sample_t get_filtered_sample() {return filtered_sample;};
-    inline filter_sample_t get_moving_average()  {return moving_average;}; /* Returns current moving average or 0 if not enabled*/
+    /* Returns current filtered sample */
+    inline filter_sample_t get_filtered_sample()                   const {return filtered_sample;};
+    /* Returns current filtered sample with DC offset removed via moving average */
+    inline filter_sample_t get_filtered_sample_dc_offset_removed() const {return (filtered_sample-moving_average);}; 
+    /* Returns current moving average or 0 if moving average is not enabled */
+    inline filter_sample_t get_moving_average()                    const {return moving_average;}; 
 
 };
 
