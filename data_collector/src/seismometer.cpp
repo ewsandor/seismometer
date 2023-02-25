@@ -9,6 +9,7 @@
 #include <pico/stdlib.h>
 
 #include "mpu-6500.hpp"
+#include "adc_manager.hpp"
 #include "sample_handler.hpp"
 #include "sampler.hpp"
 #include "seismometer_config.hpp"
@@ -57,6 +58,8 @@ void boot()
   mpu_6500_init(i2c0);
   watchdog_update();
 //  mpu_6500_calibrate();
+  watchdog_update();
+  adc_manager_init(ADC_CH_TO_MASK(ADC_CH_PENDULUM_10X) | ADC_CH_TO_MASK(ADC_CH_PENDULUM_100X));
   watchdog_update();
   printf("Initializing sample queue\n");
   queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISMOMETER_SAMPLE_QUEUE_SIZE);

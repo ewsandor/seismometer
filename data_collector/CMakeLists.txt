@@ -12,6 +12,7 @@ pico_sdk_init()
 # Main executible
 add_executable( 
                 seismometer
+                src/adc_manager.cpp
                 src/filter_coefficients.cpp
                 src/fir_filter.cpp
                 src/mpu-6500.cpp
@@ -30,7 +31,7 @@ pico_set_program_url(seismometer "https://git.sandorlaboratories.com/edward/seis
 include_directories(seismometer inc)
 
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(seismometer pico_multicore pico_stdlib hardware_i2c)
+target_link_libraries(seismometer pico_multicore pico_stdlib hardware_adc hardware_i2c)
 
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(seismometer)
