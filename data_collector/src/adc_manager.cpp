@@ -72,7 +72,7 @@ u_volts_t adc_manager_get_sample_uv(adc_channel_t channel)
  
   if(raw_sample <= ADC_MANAGER_SAMPLE_MAX_VALUE)
   {
-    ret_val = (raw_sample*VOLTAGE_MV_TO_UV(ADC_REFERENCE_VOLTAGE_MV))/ADC_MANAGER_SAMPLE_MAX_VALUE;
+    ret_val = (raw_sample*ADC_REFERENCE_VOLTAGE_MV)/ADC_MANAGER_SAMPLE_MAX_VALUE;
   }
 
   return ret_val;

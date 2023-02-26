@@ -100,13 +100,13 @@ static void accelerometer_temperature_sample_handler(const seismometer_sample_s 
   assert(SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE == sample->type);
   static absolute_time_t last_sample_time = {0};
 
-  printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3f\n", 
+  printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3fC\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
-    ((double)sample->micro_volts)/1000/1000);
+    ((double)sample->temperature)/1000);
 
-  log_sample(SAMPLE_LOG_PENDULUM, sample->index, &sample->time, sample->micro_volts);
+  log_sample(SAMPLE_LOG_ACCEL_TEMP, sample->index, &sample->time, sample->temperature);
 
   last_sample_time = sample->time;
 }
@@ -121,9 +121,9 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
-    ((double)sample->micro_volts)/1000/1000);
+    ((double)sample->micro_volts)/1000);
 
-  log_sample(SAMPLE_LOG_ACCEL_TEMP, sample->index, &sample->time, sample->temperature);
+  log_sample(SAMPLE_LOG_PENDULUM, sample->index, &sample->time, sample->micro_volts);
 
   last_sample_time = sample->time;
 }
