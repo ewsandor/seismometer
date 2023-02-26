@@ -20,6 +20,7 @@ typedef enum
   SAMPLE_LOG_ACCEL_TEMP,
   SAMPLE_LOG_PENDULUM_10X,
   SAMPLE_LOG_PENDULUM_100X,
+  SAMPLE_LOG_PENDULUM_FILTERED,
 } sample_log_key_e;
 
 static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
@@ -49,7 +50,7 @@ void set_sample_handler_epoch(absolute_time_t time)
 
 static const fir_filter_config_s acceleration_fir_filter_config
 {
-  .moving_average_order = 256,
+  .moving_average_order = 512,
   .gain_numerator   = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM,
   .gain_denominator = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN,
 };
@@ -112,6 +113,14 @@ static void accelerometer_temperature_sample_handler(const seismometer_sample_s 
   last_sample_time = sample->time;
 }
 
+static const fir_filter_config_s pendulum_fir_filter_config
+{
+  .moving_average_order = 512,
+  .gain_numerator   = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_NUM,
+  .gain_denominator = FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_GAIN_DEN,
+};
+static fir_filter_c pendulum_10x_filter (FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &pendulum_fir_filter_config);
+static fir_filter_c pendulum_100x_filter(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &pendulum_fir_filter_config);
 static void pendulum_sample_handler(const seismometer_sample_s *sample)
 {
   assert(sample != nullptr);
@@ -127,6 +136,20 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
 
   log_sample(SAMPLE_LOG_PENDULUM_10X,  sample->index, &sample->time, sample->pendulum.x10 );
   log_sample(SAMPLE_LOG_PENDULUM_100X, sample->index, &sample->time, sample->pendulum.x100);
+
+  pendulum_10x_filter.push_sample (sample->pendulum.x10);
+  pendulum_100x_filter.push_sample(sample->pendulum.x100);
+
+  if( (pendulum_100x_filter.get_filtered_sample_dc_offset_removed() >  500) ||
+      (pendulum_100x_filter.get_filtered_sample_dc_offset_removed() < -500) )
+  {
+    log_sample(SAMPLE_LOG_PENDULUM_FILTERED, sample->index, &sample->time, pendulum_10x_filter.get_filtered_sample_dc_offset_removed()*10);
+  }
+  else
+  {
+    log_sample(SAMPLE_LOG_PENDULUM_FILTERED, sample->index, &sample->time, pendulum_100x_filter.get_filtered_sample_dc_offset_removed());
+  }
+
 
   last_sample_time = sample->time;
 }
