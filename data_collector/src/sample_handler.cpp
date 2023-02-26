@@ -18,11 +18,12 @@ typedef enum
   SAMPLE_LOG_ACCEL_Z_FILTERED,
   SAMPLE_LOG_ACCEL_M_FILTERED,
   SAMPLE_LOG_ACCEL_TEMP,
+  SAMPLE_LOG_PENDULUM,
 } sample_log_key_e;
 
 static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
 {
-  printf("SAMPLE|%02x|%08x|%016llx|%016llx\n", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
+  printf("SAMPLE|%02X|%08X|%016llX|%016llX\n", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
 }
 
 static absolute_time_t epoch = {0};
@@ -103,12 +104,30 @@ static void accelerometer_temperature_sample_handler(const seismometer_sample_s 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
-    ((double)sample->temperature)/1000);
+    ((double)sample->micro_volts)/1000/1000);
+
+  log_sample(SAMPLE_LOG_PENDULUM, sample->index, &sample->time, sample->micro_volts);
+
+  last_sample_time = sample->time;
+}
+
+static void pendulum_sample_handler(const seismometer_sample_s *sample)
+{
+  assert(sample != nullptr);
+  assert(SEISMOMETER_SAMPLE_TYPE_PENDULUM == sample->type);
+  static absolute_time_t last_sample_time = {0};
+
+  printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3fV\n", 
+    sample->index, 
+    ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
+    ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
+    ((double)sample->micro_volts)/1000/1000);
 
   log_sample(SAMPLE_LOG_ACCEL_TEMP, sample->index, &sample->time, sample->temperature);
 
   last_sample_time = sample->time;
 }
+
 
 void sample_handler(const seismometer_sample_s *sample)
 {
@@ -124,6 +143,11 @@ void sample_handler(const seismometer_sample_s *sample)
     case SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE:
     {
       accelerometer_temperature_sample_handler(sample);
+      break;
+    }
+    case SEISMOMETER_SAMPLE_TYPE_PENDULUM:
+    {
+      pendulum_sample_handler(sample);
       break;
     }
     default:

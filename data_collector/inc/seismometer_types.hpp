@@ -15,7 +15,7 @@ typedef int mm_ps2_t;
 /* Voltage in milli-volts*/
 typedef unsigned int m_volts_t;
 /* Voltage in micro-volts*/
-typedef unsigned int u_volts_t;
+typedef uint64_t u_volts_t;
 
 typedef struct
 {
