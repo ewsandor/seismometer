@@ -25,6 +25,13 @@ typedef struct
 
 } acceleration_sample_s;
 
+typedef struct
+{
+  m_volts_t x10;
+  m_volts_t x100;
+
+} pendulum_sample_s;
+
 typedef enum
 {
   SEISMOMETER_SAMPLE_TYPE_INVALID,
@@ -43,9 +50,9 @@ typedef struct
 
   union 
   {
-    u_volts_t               micro_volts;
     m_celsius_t             temperature;
     acceleration_sample_s   acceleration;
+    pendulum_sample_s       pendulum;
   };
 
 } seismometer_sample_s;

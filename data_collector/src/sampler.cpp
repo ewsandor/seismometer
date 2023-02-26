@@ -59,8 +59,8 @@ static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
   sample.index = index;
   sample.time  = *time;
 
-  sample.micro_volts = adc_manager_get_sample_uv(ADC_CH_PENDULUM_100X);
-
+  sample.pendulum.x10  = adc_manager_get_sample_mv(ADC_CH_PENDULUM_10X);
+  sample.pendulum.x100 = adc_manager_get_sample_mv(ADC_CH_PENDULUM_100X);
   assert(queue_try_add(args_ptr->sample_queue, &sample));
 }
 

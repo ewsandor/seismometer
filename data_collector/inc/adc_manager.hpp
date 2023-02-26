@@ -35,8 +35,8 @@ void adc_manager_init(adc_channel_mask_t enabled_channels);
 void adc_manager_read();
 /* Returns current sample for given ADC channel.  Returns ADC_MANAGER_SAMPLE_INVALID if error */
 adc_sample_t adc_manager_get_sample(adc_channel_t channel);
-/* Returns current sample in microvolts for given ADC channel.  Returns 0 if error */
-u_volts_t    adc_manager_get_sample_uv(adc_channel_t channel);
+/* Returns current sample in millivolts for given ADC channel.  Returns 0 if error */
+m_volts_t    adc_manager_get_sample_mv(adc_channel_t channel);
 
 
 #endif /* __ADC_MANAGER_HPP__ */

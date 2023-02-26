@@ -18,7 +18,8 @@ typedef enum
   SAMPLE_LOG_ACCEL_Z_FILTERED,
   SAMPLE_LOG_ACCEL_M_FILTERED,
   SAMPLE_LOG_ACCEL_TEMP,
-  SAMPLE_LOG_PENDULUM,
+  SAMPLE_LOG_PENDULUM_10X,
+  SAMPLE_LOG_PENDULUM_100X,
 } sample_log_key_e;
 
 static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
@@ -117,13 +118,15 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
   assert(SEISMOMETER_SAMPLE_TYPE_PENDULUM == sample->type);
   static absolute_time_t last_sample_time = {0};
 
-  printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3fV\n", 
+  printf("i: %6u hz: %7.3f mean hz: %7.3f - : 10x %6.3f 100x %6.3fV\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
-    ((double)sample->micro_volts)/1000);
+    ((double)sample->pendulum.x10 )/1000,
+    ((double)sample->pendulum.x100)/1000);
 
-  log_sample(SAMPLE_LOG_PENDULUM, sample->index, &sample->time, sample->micro_volts);
+  log_sample(SAMPLE_LOG_PENDULUM_10X,  sample->index, &sample->time, sample->pendulum.x10 );
+  log_sample(SAMPLE_LOG_PENDULUM_100X, sample->index, &sample->time, sample->pendulum.x100);
 
   last_sample_time = sample->time;
 }

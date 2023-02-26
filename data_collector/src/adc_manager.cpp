@@ -65,9 +65,9 @@ adc_sample_t adc_manager_get_sample(adc_channel_t channel)
   return ret_val;
 }
 
-u_volts_t adc_manager_get_sample_uv(adc_channel_t channel)
+m_volts_t adc_manager_get_sample_mv(adc_channel_t channel)
 {
-  u_volts_t    ret_val = 0;
+  m_volts_t    ret_val = 0;
   adc_sample_t raw_sample = adc_manager_get_sample(channel);
  
   if(raw_sample <= ADC_MANAGER_SAMPLE_MAX_VALUE)
