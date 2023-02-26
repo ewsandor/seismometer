@@ -12,6 +12,11 @@ typedef int m_celsius_t;
 /* Acceleration in millimeters per second^2*/
 typedef int mm_ps2_t;
 
+/* Voltage in milli-volts*/
+typedef unsigned int m_volts_t;
+/* Voltage in micro-volts*/
+typedef unsigned int u_volts_t;
+
 typedef struct
 {
   mm_ps2_t x;
@@ -25,6 +30,7 @@ typedef enum
   SEISMOMETER_SAMPLE_TYPE_INVALID,
   SEISMOMETER_SAMPLE_TYPE_ACCELERATION,
   SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE,
+  SEISMOMETER_SAMPLE_TYPE_PENDULUM,
 } seismometer_sample_type_e;
 
 typedef uint sample_index_t;
@@ -37,6 +43,7 @@ typedef struct
 
   union 
   {
+    u_volts_t               micro_volts;
     m_celsius_t             temperature;
     acceleration_sample_s   acceleration;
   };

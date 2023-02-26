@@ -10,6 +10,9 @@
 #define TIME_US_TO_MS(time_us) (time_us/1000)
 #define TIME_US_TO_S(time_us)  (TIME_US_TO_MS(time_us)/1000)
 
+#define VOLTAGE_MV_TO_UV(mv)   (mv*1000)
+#define VOLTAGE_UV_TO_MV(uv)   (uv/1000)
+
 #define SEISMOMETER_MAX(a,b)   MAX(a, b)
 #define SEISMOMETER_MIN(a,b)   MIN(a, b)
 

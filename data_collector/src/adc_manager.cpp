@@ -5,6 +5,7 @@
 #include <pico/binary_info.h>
 
 #include "adc_manager.hpp"
+#include "seismometer_utils.hpp"
 
 static adc_channel_mask_t enabled_channels = 0;
 static adc_sample_t current_sample[ADC_CH_MAX] = {0};
@@ -59,6 +60,19 @@ adc_sample_t adc_manager_get_sample(adc_channel_t channel)
   if(enabled_channels & ADC_CH_TO_MASK(channel))
   {
     ret_val = current_sample[channel];
+  }
+
+  return ret_val;
+}
+
+u_volts_t adc_manager_get_sample_uv(adc_channel_t channel)
+{
+  u_volts_t    ret_val = 0;
+  adc_sample_t raw_sample = adc_manager_get_sample(channel);
+ 
+  if(raw_sample <= ADC_MANAGER_SAMPLE_MAX_VALUE)
+  {
+    ret_val = (raw_sample*VOLTAGE_MV_TO_UV(ADC_REFERENCE_VOLTAGE_MV))/ADC_MANAGER_SAMPLE_MAX_VALUE;
   }
 
   return ret_val;

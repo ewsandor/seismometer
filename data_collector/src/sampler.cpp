@@ -50,6 +50,19 @@ static void sample_mpu_6500(sample_index_t index, const absolute_time_t *time)
   assert(queue_try_add(args_ptr->sample_queue, &acceleration_sample));
 }
 
+static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
+{
+  /* Sample Pendulum Voltage */
+  seismometer_sample_s sample; 
+  memset(&sample, 0, sizeof(seismometer_sample_s));
+  sample.type  = SEISMOMETER_SAMPLE_TYPE_PENDULUM;
+  sample.index = index;
+  sample.time  = *time;
+
+  sample.micro_volts = 0;
+  assert(queue_try_add(args_ptr->sample_queue, &sample));
+}
+
 void sampler_thread_main()
 {
   printf("Initializing sample semaphore.\n");
@@ -72,6 +85,7 @@ void sampler_thread_main()
 
     /* Commit samples */
     sample_mpu_6500(sample_index, &mpu_6500_read_time);
+    sample_pendulum(sample_index, &adc_manager_read_time);
 
     sample_index++;
   }
