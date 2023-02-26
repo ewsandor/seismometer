@@ -6,18 +6,21 @@
 
 #include "adc_manager.hpp"
 
-void adc_manager_init(adc_channel_mask_t enabled_channels)
+static adc_channel_mask_t enabled_channels = 0;
+static adc_sample_t current_sample[ADC_CH_MAX] = {0};
+
+void adc_manager_init(adc_channel_mask_t enabled_channels_init)
 {
   printf("Initializing ADC manager.");
 
+  enabled_channels = enabled_channels_init;
+
   adc_init();
-
-  adc_channel_mask_t enabled_channels_copy = enabled_channels;
-  adc_channel_t      adc_channel = 0;
-
   bi_decl(bi_1pin_with_name(ADC_CH_TO_PIN(ADC_CH_PENDULUM_10X),  "Pendulum ADC with  10x Hardware Gain"));
   bi_decl(bi_1pin_with_name(ADC_CH_TO_PIN(ADC_CH_PENDULUM_100X), "Pendulum ADC with 100x Hardware Gain"));
 
+  adc_channel_t      adc_channel = 0;
+  adc_channel_mask_t enabled_channels_copy = enabled_channels;
   while(enabled_channels_copy)
   {
     assert(adc_channel < ADC_CH_MAX);
@@ -28,4 +31,35 @@ void adc_manager_init(adc_channel_mask_t enabled_channels)
     enabled_channels_copy &= ~(ADC_CH_TO_MASK(adc_channel));
     adc_channel++;
   }
+}
+
+void adc_manager_read()
+{
+  adc_channel_t      adc_channel = 0;
+  adc_channel_mask_t enabled_channels_copy = enabled_channels;
+  while(enabled_channels_copy)
+  {
+    assert(adc_channel < ADC_CH_MAX);
+    if(enabled_channels_copy & ADC_CH_TO_MASK(adc_channel))
+    {
+      adc_select_input(adc_channel);
+      current_sample[adc_channel] = adc_read();
+    }
+    enabled_channels_copy &= ~(ADC_CH_TO_MASK(adc_channel));
+    adc_channel++;
+  }
+}
+
+adc_sample_t adc_manager_get_sample(adc_channel_t channel)
+{
+  adc_sample_t ret_val = ADC_MANAGER_SAMPLE_INVALID;
+
+  assert(channel < ADC_CH_MAX);
+
+  if(enabled_channels & ADC_CH_TO_MASK(channel))
+  {
+    ret_val = current_sample[channel];
+  }
+
+  return ret_val;
 }

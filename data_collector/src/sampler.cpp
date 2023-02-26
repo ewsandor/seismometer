@@ -5,6 +5,7 @@
 #include <pico/stdlib.h>
 #include <pico/sem.h>
 
+#include "adc_manager.hpp"
 #include "mpu-6500.hpp"
 #include "sampler.hpp"
 
@@ -60,11 +61,16 @@ void sampler_thread_main()
   sample_index_t sample_index = 0;
   while (1)
   {
+    /* Wait for sample throttler */
     sem_acquire_blocking(&sample_semaphore);
-    /* Read from sensor */
-    absolute_time_t mpu_6500_read_time = get_absolute_time();
+
+    /* Read from sensors */
+    absolute_time_t adc_manager_read_time = get_absolute_time();
+    adc_manager_read();
+    absolute_time_t mpu_6500_read_time    = get_absolute_time();
     mpu_6500_read();
 
+    /* Commit samples */
     sample_mpu_6500(sample_index, &mpu_6500_read_time);
 
     sample_index++;
