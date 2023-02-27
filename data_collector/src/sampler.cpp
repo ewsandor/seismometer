@@ -22,7 +22,7 @@ void sampler_thread_pass_args(sample_thread_args_s *args)
 
 static bool sample_timer_callback(repeating_timer_t *rt)
 {
-  smps_control_force_pwm(SMPS_CONTROL_CLIENT_SAMPLE);
+  smps_control_force_pwm(SMPS_CONTROL_CLIENT_SAMPLER);
   assert(sem_release((semaphore_t*)rt->user_data));
   return true; /*true to continue repeating, false to stop.*/
 }
@@ -85,7 +85,7 @@ void sampler_thread_main()
     adc_manager_read();
     absolute_time_t mpu_6500_read_time    = get_absolute_time();
     mpu_6500_read();
-    smps_control_power_save(SMPS_CONTROL_CLIENT_SAMPLE);
+    smps_control_power_save(SMPS_CONTROL_CLIENT_SAMPLER);
 
     /* Commit samples */
     sample_mpu_6500(sample_index, &mpu_6500_read_time);

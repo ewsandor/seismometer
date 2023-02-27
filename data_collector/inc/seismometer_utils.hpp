@@ -18,7 +18,7 @@
 
 typedef enum
 {
-  SMPS_CONTROL_CLIENT_SAMPLE,
+  SMPS_CONTROL_CLIENT_SAMPLER,
   SMPS_CONTROL_CLIENT_MAX,
 } smps_control_client_e;
 
