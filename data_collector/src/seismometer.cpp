@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include <hardware/gpio.h>
 #include <hardware/i2c.h>
 #include <hardware/watchdog.h>
 #include <pico/binary_info.h>
@@ -15,7 +16,46 @@
 #include "seismometer_config.hpp"
 #include "seismometer_utils.hpp"
 
-void i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
+#define SMPS_CONTROL_PIN 23
+
+critical_section_t smps_control_critical_section = {0};
+static unsigned int smps_control_vote_mask = 0;
+void smps_control_force_pwm(smps_control_client_e client)
+{
+  assert(client < SMPS_CONTROL_CLIENT_MAX);
+  critical_section_enter_blocking(&smps_control_critical_section);
+  if(0 == smps_control_vote_mask)
+  {
+    gpio_put(SMPS_CONTROL_PIN, 1);
+  }
+  smps_control_vote_mask |= (1<<client);
+  critical_section_exit(&smps_control_critical_section);
+}
+void smps_control_power_save(smps_control_client_e client)
+{
+  assert(client < SMPS_CONTROL_CLIENT_MAX);
+  critical_section_enter_blocking(&smps_control_critical_section);
+  smps_control_vote_mask &= ~(1<<client);
+  if(0 == smps_control_vote_mask)
+  {
+    gpio_put(SMPS_CONTROL_PIN, 0);
+  }
+  critical_section_exit(&smps_control_critical_section);
+}
+
+static void smps_control_init()
+{
+  printf("Initializing SMPS power-save control.\n");
+  bi_decl(bi_1pin_with_name(SMPS_CONTROL_PIN, "SMPS Power-Saving Control"));
+  critical_section_init(&smps_control_critical_section);
+  (SMPS_CONTROL_PIN);
+  gpio_set_dir(SMPS_CONTROL_PIN, GPIO_OUT);
+  gpio_pull_down(SMPS_CONTROL_PIN);
+  gpio_put(SMPS_CONTROL_PIN, 0);
+
+}
+
+void static i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
 {
   printf("Initializing I2C with SDA pin %u and SCL pin %u with %uhz baud.\n", sda_pin, scl_pin, baud);
   i2c_init(i2c, baud);
@@ -54,6 +94,8 @@ void boot()
   watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
+  watchdog_update();
+  smps_control_init();
   watchdog_update();
   mpu_6500_init(i2c0);
   watchdog_update();

@@ -16,4 +16,15 @@
 #define SEISMOMETER_MAX(a,b)   MAX(a, b)
 #define SEISMOMETER_MIN(a,b)   MIN(a, b)
 
+typedef enum
+{
+  SMPS_CONTROL_CLIENT_SAMPLE,
+  SMPS_CONTROL_CLIENT_MAX,
+} smps_control_client_e;
+
+/* Force SMPS into PWM mode to minimize voltage-regulator ripple */
+void smps_control_force_pwm(smps_control_client_e client);
+/* Allow SMPS to enter power-saving mode which may introduce voltage-regulator ripple */
+void smps_control_power_save(smps_control_client_e client);
+
 #endif /*__SEISMOMETER_UTILS_HPP__*/
