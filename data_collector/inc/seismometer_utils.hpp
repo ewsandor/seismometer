@@ -27,4 +27,15 @@ void smps_control_force_pwm(smps_control_client_e client);
 /* Allow SMPS to enter power-saving mode which may introduce voltage-regulator ripple */
 void smps_control_power_save(smps_control_client_e client);
 
+typedef enum
+{
+  ERROR_STATE_BOOT,
+  ERROR_STATE_RTC_NOT_SET,
+  ERROR_STATE_MAX,
+
+} error_state_e;
+typedef unsigned int error_state_mask_t;
+void error_state_update(error_state_e state, bool in_error);
+error_state_mask_t error_state_get();
+
 #endif /*__SEISMOMETER_UTILS_HPP__*/

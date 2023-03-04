@@ -24,9 +24,9 @@ serial_baud=default_serial_baud
 default_max_database_length=500000
 max_database_length=default_max_database_length
 #plot_channels = [1, 2, 3, 4, 5, 6, 7, 8]
-#plot_channels = [5,6,7]
+plot_channels = [5,6,7]
 #plot_channels = [11, 10, 12]
-plot_channels = [12]
+#plot_channels = [12]
 
 
 title_block_str=program_name_str +"\n" \

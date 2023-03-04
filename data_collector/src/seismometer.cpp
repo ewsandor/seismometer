@@ -17,6 +17,7 @@
 #include "seismometer_utils.hpp"
 
 #define SMPS_CONTROL_PIN 23
+#define STATUS_LED_PIN   PICO_DEFAULT_LED_PIN
 
 critical_section_t smps_control_critical_section = {0};
 static unsigned int smps_control_vote_mask = 0;
@@ -43,16 +44,58 @@ void smps_control_power_save(smps_control_client_e client)
   critical_section_exit(&smps_control_critical_section);
 }
 
+critical_section_t error_state_critical_section = {0};
+static unsigned int error_state_mask = (1<<ERROR_STATE_BOOT);
+static void error_state_init()
+{
+  critical_section_init(&error_state_critical_section);
+  printf("Initialized error state manager.\n");
+}
+void error_state_update(error_state_e state, bool in_error)
+{
+  critical_section_enter_blocking(&error_state_critical_section);
+  if(in_error == true)
+  {
+    error_state_mask |= (1<<state);
+  }
+  else
+  {
+    error_state_mask &= ~(1<<state);
+  }
+  critical_section_exit(&error_state_critical_section);
+}
+error_state_mask_t error_state_get()
+{
+  critical_section_enter_blocking(&error_state_critical_section);
+  error_state_mask_t ret_val = error_state_mask;
+  critical_section_exit(&error_state_critical_section);
+  return ret_val;
+}
+
 static void smps_control_init()
 {
   printf("Initializing SMPS power-save control.\n");
   bi_decl(bi_1pin_with_name(SMPS_CONTROL_PIN, "SMPS Power-Saving Control"));
   critical_section_init(&smps_control_critical_section);
-  (SMPS_CONTROL_PIN);
+  gpio_init(SMPS_CONTROL_PIN);
   gpio_set_dir(SMPS_CONTROL_PIN, GPIO_OUT);
   gpio_pull_down(SMPS_CONTROL_PIN);
   gpio_put(SMPS_CONTROL_PIN, 0);
 
+}
+static void status_led_init()
+{
+  printf("Initializing status LED.\n");
+  bi_decl(bi_1pin_with_name(STATUS_LED_PIN, "Status LED"));
+  gpio_init(STATUS_LED_PIN);
+  gpio_set_dir(STATUS_LED_PIN, GPIO_OUT);
+  gpio_pull_down(STATUS_LED_PIN);
+  gpio_put(STATUS_LED_PIN, 0);
+
+}
+static void status_led_update(bool enabled)
+{
+  gpio_put(STATUS_LED_PIN, enabled);
 }
 
 void static i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
@@ -90,12 +133,15 @@ void boot()
           "Rebooted by Watchdog!\n");
   } 
   printf("Starting boot.\n");
-  printf("Enabling %u ms watchdog.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
   watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
+  printf("Enabled %u ms watchdog.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
+  error_state_init();
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
   smps_control_init();
+  watchdog_update();
+  status_led_init();
   watchdog_update();
   mpu_6500_init(i2c0);
   watchdog_update();
@@ -111,6 +157,7 @@ void boot()
   sampler_thread_pass_args(&sampler_thead_args);
   multicore_launch_core1(sampler_thread_main);
   watchdog_update();
+  error_state_update(ERROR_STATE_BOOT, false);
   printf("Boot complete!\n");
 }
 
@@ -124,6 +171,7 @@ int main()
   set_sample_handler_epoch(get_absolute_time());
   while(1)
   {
+    status_led_update(error_state_get() == 0);
     seismometer_sample_s sample;
     printf("Queue length %u\n", queue_get_level(&sample_queue));
     watchdog_update();
