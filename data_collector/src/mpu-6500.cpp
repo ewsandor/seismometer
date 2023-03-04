@@ -4,7 +4,7 @@
 
 #include "mpu-6500.hpp"
 
-#define MPU_6500_I2C_ADDRESS 0x68
+#define MPU_6500_I2C_ADDRESS 0x69
 
 typedef enum
 {
