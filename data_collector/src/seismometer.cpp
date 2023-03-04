@@ -95,7 +95,12 @@ static void status_led_init()
 }
 static void status_led_update(bool enabled)
 {
-  gpio_put(STATUS_LED_PIN, enabled);
+  static bool status_led_enabled = false;
+  if(enabled != status_led_enabled)
+  {
+    status_led_enabled = enabled;
+    gpio_put(STATUS_LED_PIN, enabled);
+  }
 }
 
 void static i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
