@@ -168,9 +168,11 @@ void sampler_thread_main()
       case SAMPLE_TRIGGER_RTC_TICK:
       {
         rtc_ds3231_read(sample_trigger.timestamp);
-        printf("RTC trigger time %llu.%06llu\n", 
-          to_us_since_boot(sample_trigger.timestamp)/1000000, 
-          to_us_since_boot(sample_trigger.timestamp)%1000000);
+        seismometer_sample_s sample; 
+        memset(&sample, 0, sizeof(seismometer_sample_s));
+        sample.type = SEISMOMETER_SAMPLE_TYPE_RTC_TICK;
+        sample.time = sample_trigger.timestamp;
+        assert(queue_try_add(args_ptr->sample_queue, &sample));
         break;
       }
       default:

@@ -6,6 +6,7 @@
 
 #include "filter_coefficients.hpp"
 #include "fir_filter.hpp"
+#include "rtc_ds3231.hpp"
 #include "sample_handler.hpp"
 
 typedef enum
@@ -182,6 +183,19 @@ void sample_handler(const seismometer_sample_s *sample)
     case SEISMOMETER_SAMPLE_TYPE_PENDULUM:
     {
       pendulum_sample_handler(sample);
+      break;
+    }
+    case SEISMOMETER_SAMPLE_TYPE_RTC_TICK:
+    {
+      seismometer_time_s time_s;
+      absolute_time_t reference_time = rtc_ds3231_get_time(&time_s);
+      assert(absolute_time_diff_us(reference_time, sample->time)==0);
+      char time_string[128];
+      strftime(time_string, 128, "%FT%T", &time_s);
+      printf("RTC %s trigger time %llu.%06llu\n", 
+        time_string,
+        to_us_since_boot(reference_time)/1000000, 
+        to_us_since_boot(reference_time)%1000000);
       break;
     }
     case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:
