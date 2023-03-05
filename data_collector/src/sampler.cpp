@@ -2,8 +2,8 @@
 #include <cstring>
 #include <cstdio>
 
+#include <pico/multicore.h>
 #include <pico/stdlib.h>
-#include <pico/sem.h>
 
 #include "adc_manager.hpp"
 #include "rtc_ds3231.hpp"
@@ -12,8 +12,25 @@
 #include "seismometer_utils.hpp"
 
 static sample_thread_args_s *args_ptr = nullptr;
-static repeating_timer_t     sample_timer     = {0};
-static semaphore_t           sample_semaphore = {0}; 
+static repeating_timer_t     sample_timer         = {0};
+#define SAMPLE_TRIGGER_QUEUE_SIZE 4
+typedef enum
+{
+  SAMPLE_TRIGGER_INVALID,
+  SAMPLE_TRIGGER_SAMPLE_PERIOD,
+  SAMPLE_TRIGGER_RTC_TICK,
+  SAMPLE_TRIGGER_MAX
+} sample_trigger_e;
+typedef struct 
+{
+  sample_trigger_e trigger;
+
+  union 
+  {
+    absolute_time_t timestamp;
+  };
+} sample_trigger_s;
+static queue_t sample_trigger_queue = {0};
 
 void sampler_thread_pass_args(sample_thread_args_s *args)
 {
@@ -24,7 +41,8 @@ void sampler_thread_pass_args(sample_thread_args_s *args)
 static bool sample_timer_callback(repeating_timer_t *rt)
 {
   smps_control_force_pwm(SMPS_CONTROL_CLIENT_SAMPLER);
-  assert(sem_release((semaphore_t*)rt->user_data));
+  sample_trigger_s sample_trigger = {.trigger=SAMPLE_TRIGGER_SAMPLE_PERIOD};
+  assert(queue_try_add((queue_t*) rt->user_data, &sample_trigger));
   return true; /*true to continue repeating, false to stop.*/
 }
 
@@ -75,7 +93,12 @@ void gpio_irq_callback(uint gpio, uint32_t event_mask)
     case RTC_INTERRUPT_PIN:
     {
       assert(event_mask == GPIO_IRQ_EDGE_RISE);
-      rtc_ds3231_read();
+      sample_trigger_s sample_trigger = 
+      {
+        .trigger  =SAMPLE_TRIGGER_RTC_TICK,
+        .timestamp=get_absolute_time(),
+      };
+      assert(queue_try_add(&sample_trigger_queue, &sample_trigger));
       break;
     }
     default:
@@ -88,15 +111,14 @@ void gpio_irq_callback(uint gpio, uint32_t event_mask)
 
 void sampler_thread_main()
 {
-  printf("Initializing sample semaphore.\n");
-  sem_init(&sample_semaphore, 0, 1);
+  printf("Initializing sample trigger queue.\n");
+  queue_init(&sample_trigger_queue, sizeof(sample_trigger_s), SAMPLE_TRIGGER_QUEUE_SIZE);
 
   printf("Starting sample timer.\n");
-  assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_semaphore, &sample_timer));
+  assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
 
 //  rtc_ds3231_set(1677996693);
   rtc_ds3231_read();
-  absolute_time_t last_rtc_read = get_absolute_time();
 
   /* Initialize GPIO interrupts */
   gpio_set_irq_callback(gpio_irq_callback);
@@ -111,26 +133,39 @@ void sampler_thread_main()
   sample_index_t sample_index = 0;
   while (1)
   {
-    /* Wait for sample throttler */
-    sem_acquire_blocking(&sample_semaphore);
+    /* Wait for sample trigger */
+    sample_trigger_s sample_trigger;
+    queue_remove_blocking(&sample_trigger_queue, &sample_trigger);
 
-    /* Read from sensors */
-    absolute_time_t adc_manager_read_time = get_absolute_time();
-    adc_manager_read();
-    absolute_time_t mpu_6500_read_time    = get_absolute_time();
-    mpu_6500_read();
-    smps_control_power_save(SMPS_CONTROL_CLIENT_SAMPLER);
-
-    if(absolute_time_diff_us(last_rtc_read, get_absolute_time()) > TIME_S_TO_US(1))
+    switch(sample_trigger.trigger)
     {
-//      rtc_ds3231_read();
-      last_rtc_read = get_absolute_time();
+      case SAMPLE_TRIGGER_SAMPLE_PERIOD:
+      {
+        /* Read from sensors */
+        absolute_time_t adc_manager_read_time = get_absolute_time();
+        adc_manager_read();
+        absolute_time_t mpu_6500_read_time    = get_absolute_time();
+        mpu_6500_read();
+        smps_control_power_save(SMPS_CONTROL_CLIENT_SAMPLER);
+
+        /* Commit samples */
+        sample_mpu_6500(sample_index, &mpu_6500_read_time);
+        sample_pendulum(sample_index, &adc_manager_read_time);
+
+        sample_index++;
+        break;
+      }
+      case SAMPLE_TRIGGER_RTC_TICK:
+      {
+        rtc_ds3231_read();
+        printf("RTC trigger time %u\n", to_ms_since_boot(get_absolute_time()));
+        break;
+      }
+      default:
+      {
+        printf("Unexpected sample trigger %u\n", sample_trigger.trigger);
+        assert(0);
+      }
     }
-
-    /* Commit samples */
-    sample_mpu_6500(sample_index, &mpu_6500_read_time);
-    sample_pendulum(sample_index, &adc_manager_read_time);
-
-    sample_index++;
   }
 }
