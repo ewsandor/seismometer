@@ -136,8 +136,8 @@ void rtc_ds3231_read()
 
   new_data.oscillator_stopped   = ((read_buffer[0xF] & (1<<7)) != 0);
   new_data.busy                 = ((read_buffer[0xF] & (1<<2)) != 0);
-  new_data.alarm1_triggered     = ((read_buffer[0xF] & (1<<1)) != 0);
-  new_data.alarm2_triggered     = ((read_buffer[0xF] & (1<<0)) != 0);
+  new_data.alarm2_triggered     = ((read_buffer[0xF] & (1<<1)) != 0);
+  new_data.alarm1_triggered     = ((read_buffer[0xF] & (1<<0)) != 0);
   new_data.aging_offset         = (read_buffer[0x10]);
   new_data.temperature          = (read_buffer[0x11]);
   new_data.temperature_fraction = (read_buffer[0x12]>>6);

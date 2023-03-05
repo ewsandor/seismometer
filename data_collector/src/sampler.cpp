@@ -85,8 +85,13 @@ static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
   assert(queue_try_add(args_ptr->sample_queue, &sample));
 }
 
+static void rtc_alarm_cb(void* user_data_ptr)
+{
+  printf("RTC alarm %u!\n", (unsigned int) user_data_ptr);
+}
+
 #define RTC_INTERRUPT_PIN 22
-void gpio_irq_callback(uint gpio, uint32_t event_mask)
+static void gpio_irq_callback(uint gpio, uint32_t event_mask)
 {
   switch(gpio)
   {
@@ -119,6 +124,7 @@ void sampler_thread_main()
 
 //  rtc_ds3231_set(1677996693);
   rtc_ds3231_read();
+  rtc_ds3231_set_alarm1_cb(rtc_alarm_cb, (void*)1);
 
   /* Initialize GPIO interrupts */
   gpio_set_irq_callback(gpio_irq_callback);
