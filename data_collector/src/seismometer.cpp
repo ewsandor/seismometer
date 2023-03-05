@@ -96,11 +96,20 @@ static void status_led_init()
 }
 static void status_led_update(bool enabled)
 {
-  static bool status_led_enabled = false;
-  if(enabled != status_led_enabled)
+  static bool led_state=false;
+  bool new_led_state = false;
+
+  if(enabled)
   {
-    status_led_enabled = enabled;
-    gpio_put(STATUS_LED_PIN, enabled);
+    uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+    /*1024ms heartbeat to avoid division operator */
+    new_led_state = ((now_ms & (1024-1)) < 512);
+  }
+
+  if(new_led_state != led_state)
+  {
+    led_state = new_led_state;
+    gpio_put(STATUS_LED_PIN, led_state);
   }
 }
 
