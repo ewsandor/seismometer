@@ -67,6 +67,25 @@ static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
   assert(queue_try_add(args_ptr->sample_queue, &sample));
 }
 
+#define RTC_INTERRUPT_PIN 22
+void gpio_irq_callback(uint gpio, uint32_t event_mask)
+{
+  switch(gpio)
+  {
+    case RTC_INTERRUPT_PIN:
+    {
+      assert(event_mask == GPIO_IRQ_EDGE_RISE);
+      rtc_ds3231_read();
+      break;
+    }
+    default:
+    {
+      printf("Unexpected interrupt for GPIO %u with event mask 0x%x", gpio, event_mask);
+      break;
+    }
+  }
+}
+
 void sampler_thread_main()
 {
   printf("Initializing sample semaphore.\n");
@@ -78,6 +97,16 @@ void sampler_thread_main()
 //  rtc_ds3231_set(1677996693);
   rtc_ds3231_read();
   absolute_time_t last_rtc_read = get_absolute_time();
+
+  /* Initialize GPIO interrupts */
+  gpio_set_irq_callback(gpio_irq_callback);
+  /* RTC Interrupt */
+  gpio_init(RTC_INTERRUPT_PIN);
+  gpio_set_dir(RTC_INTERRUPT_PIN, false);
+  gpio_pull_up(RTC_INTERRUPT_PIN);
+  gpio_set_irq_enabled(RTC_INTERRUPT_PIN, GPIO_IRQ_EDGE_RISE, true);
+  /* Enable GPIO Interrupts */
+  irq_set_enabled(IO_IRQ_BANK0, true);
 
   sample_index_t sample_index = 0;
   while (1)
@@ -94,7 +123,7 @@ void sampler_thread_main()
 
     if(absolute_time_diff_us(last_rtc_read, get_absolute_time()) > TIME_S_TO_US(1))
     {
-      rtc_ds3231_read();
+//      rtc_ds3231_read();
       last_rtc_read = get_absolute_time();
     }
 
