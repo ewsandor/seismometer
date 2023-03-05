@@ -192,6 +192,12 @@ int main()
     watchdog_update();
     queue_remove_blocking(&sample_queue, &sample);
     sample_handler(&sample);
+
+    seismometer_time_s time_s;
+    rtc_ds3231_get_time(&time_s);
+    char time_string[128];
+    strftime(time_string, 128, "%FT%T", &time_s);
+    printf("%s\n", time_string);
   }
 
   return 0;

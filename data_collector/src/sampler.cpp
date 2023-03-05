@@ -78,6 +78,7 @@ void sampler_thread_main()
 
   printf("Reading RTC.\n");
   rtc_ds3231_read();
+  absolute_time_t last_rtc_read = get_absolute_time();
 
   sample_index_t sample_index = 0;
   while (1)
@@ -91,6 +92,12 @@ void sampler_thread_main()
     absolute_time_t mpu_6500_read_time    = get_absolute_time();
     mpu_6500_read();
     smps_control_power_save(SMPS_CONTROL_CLIENT_SAMPLER);
+
+    if(absolute_time_diff_us(last_rtc_read, get_absolute_time()) > TIME_S_TO_US(1))
+    {
+      rtc_ds3231_read();
+      last_rtc_read = get_absolute_time();
+    }
 
     /* Commit samples */
     sample_mpu_6500(sample_index, &mpu_6500_read_time);

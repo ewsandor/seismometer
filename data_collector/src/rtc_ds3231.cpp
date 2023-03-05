@@ -2,6 +2,7 @@
 #include <cstdio>
 
 #include <hardware/i2c.h>
+#include <pico/sync.h>
 
 #include "rtc_ds3231.hpp"
 #include "seismometer_utils.hpp"
@@ -31,7 +32,8 @@ typedef struct
 typedef struct 
 {
   i2c_inst_t        *i2c_inst;
-  rtc_ds3231_data_s  data;
+  critical_section_t critical_section = {0};
+  rtc_ds3231_data_s  data             = {0};
 } rtc_ds3231_s;
 
 static rtc_ds3231_s context = 
@@ -46,6 +48,7 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
   error_state_update(ERROR_STATE_RTC_NOT_SET, true);
 
   context.i2c_inst = i2c_inst;
+  critical_section_init(&context.critical_section);
 
   //Write buffer index 0 is register address
   //Write buffer index 1 is write data
@@ -95,13 +98,15 @@ void rtc_ds3231_read()
   /* Get current status register */
   assert(19 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, read_buffer, 19, false));
 
-  context.data.seconds = (read_buffer[0] & 0xF) + (((read_buffer[0]>>4) & 0x7)*10);
-  context.data.minutes = (read_buffer[1] & 0xF) + (((read_buffer[1]>>4) & 0x7)*10);
-  context.data.hours   = (read_buffer[2] & 0xF);
+  rtc_ds3231_data_s new_data = {0};
+
+  new_data.seconds = (read_buffer[0] & 0xF) + (((read_buffer[0]>>4) & 0x7)*10);
+  new_data.minutes = (read_buffer[1] & 0xF) + (((read_buffer[1]>>4) & 0x7)*10);
+  new_data.hours   = (read_buffer[2] & 0xF);
   if(0 != (read_buffer[2] & (1<<4)))
   {
     /* Handle 10-hour bit*/
-    context.data.hours += 10;
+    new_data.hours += 10;
   }
   if(0 != (read_buffer[2] & (1<<5)))
   {
@@ -109,31 +114,52 @@ void rtc_ds3231_read()
     if(0 == (read_buffer[2] & (1<<6)))
     {
       /* 24-Hour Mode, 20-Hour bit */
-      context.data.hours += 20;
+      new_data.hours += 20;
     }
     else
     {
       /* 12-Hour Mode, PM bit */
-      context.data.hours += 12;
+      new_data.hours += 12;
     }
   }
-  context.data.day     = (read_buffer[3] & 0x7);
-  context.data.date    = (read_buffer[4] & 0xF) + (((read_buffer[4] >> 4) & 0x3)*10);
-  context.data.month   = (read_buffer[5] & 0xF) + (((read_buffer[5] >> 4) & 0x1)*10);
-  context.data.year    = (read_buffer[6] & 0xF) + (((read_buffer[6] >> 4) & 0xF)*10);
-  context.data.century = ((read_buffer[5] & (1<<7)) != 0);
+  new_data.day     = (read_buffer[3] & 0x7);
+  new_data.date    = (read_buffer[4] & 0xF) + (((read_buffer[4] >> 4) & 0x3)*10);
+  new_data.month   = (read_buffer[5] & 0xF) + (((read_buffer[5] >> 4) & 0x1)*10);
+  new_data.year    = (read_buffer[6] & 0xF) + (((read_buffer[6] >> 4) & 0xF)*10);
+  new_data.century = ((read_buffer[5] & (1<<7)) != 0);
 
-  context.data.oscillator_stopped   = ((read_buffer[0xF] & (1<<7)) != 0);
-  context.data.busy                 = ((read_buffer[0xF] & (1<<2)) != 0);
-  context.data.alarm1_triggered     = ((read_buffer[0xF] & (1<<1)) != 0);
-  context.data.alarm2_triggered     = ((read_buffer[0xF] & (1<<0)) != 0);
-  context.data.aging_offset         = (read_buffer[0x10]);
-  context.data.temperature          = (read_buffer[0x11]);
-  context.data.temperature_fraction = (read_buffer[0x12]>>6);
+  new_data.oscillator_stopped   = ((read_buffer[0xF] & (1<<7)) != 0);
+  new_data.busy                 = ((read_buffer[0xF] & (1<<2)) != 0);
+  new_data.alarm1_triggered     = ((read_buffer[0xF] & (1<<1)) != 0);
+  new_data.alarm2_triggered     = ((read_buffer[0xF] & (1<<0)) != 0);
+  new_data.aging_offset         = (read_buffer[0x10]);
+  new_data.temperature          = (read_buffer[0x11]);
+  new_data.temperature_fraction = (read_buffer[0x12]>>6);
+  error_state_update(ERROR_STATE_RTC_NOT_SET, new_data.oscillator_stopped);
+
+  critical_section_enter_blocking(&context.critical_section);
+  context.data = new_data;
+  critical_section_exit(&context.critical_section);
 }
 
 void rtc_ds3231_get_time(seismometer_time_s *time)
 {
   assert(time != nullptr);
+
+  critical_section_enter_blocking(&context.critical_section);
+  rtc_ds3231_data_s data_copy = context.data;
+  critical_section_exit(&context.critical_section);
+
   *time = {0};
+  time->tm_sec   = (data_copy.seconds % 60);  /* 0-59 */
+  time->tm_min   = (data_copy.minutes % 60);  /* 0-59 */
+  time->tm_hour  = (data_copy.hours   % 24);  /* 0-24 */
+  time->tm_mday  = (data_copy.date    % 32);  /* 1-31 */
+  if(time->tm_mday == 0)      { time->tm_mday++; }
+  time->tm_mon   = (data_copy.month   % 12);  /* 0-11 */
+  time->tm_year  = (data_copy.year    % 100); /* 0-199 */
+  if(data_copy.century==true) { time->tm_year += 100; }
+  time->tm_wday  = (data_copy.day     % 8);   /* 1-7 */
+  if(time->tm_wday == 0)      { time->tm_wday++; }
+  time->tm_isdst = false;                     /* no DST */
 }
