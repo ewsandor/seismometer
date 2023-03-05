@@ -31,9 +31,14 @@ typedef struct
 
 typedef struct 
 {
-  i2c_inst_t        *i2c_inst;
-  critical_section_t critical_section = {0};
-  rtc_ds3231_data_s  data             = {0};
+  i2c_inst_t          *i2c_inst             = nullptr;
+  critical_section_t   critical_section     = {0};
+  rtc_ds3231_data_s    data                 = {0};
+  rtc_ds3231_alarm_cb  alarm1_cb            = nullptr;
+ void                 *alarm1_user_data_ptr = nullptr;
+  rtc_ds3231_alarm_cb  alarm2_cb            = nullptr;
+ void                 *alarm2_user_data_ptr = nullptr;
+
 } rtc_ds3231_s;
 
 static rtc_ds3231_s context = 
@@ -91,12 +96,17 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
 void rtc_ds3231_read()
 {
   /* Reset register address to 0x00 */
-  uint8_t write_buffer=0x00;
-  assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer, 1, false));
+  uint8_t write_buffer[2];
+  write_buffer[0]=0x00;
+  assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, true));
   /* Read all 19 registers */
   uint8_t read_buffer[19];
   /* Get current status register */
   assert(19 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, read_buffer, 19, false));
+  /* Reset alarm interrupt flags */
+  write_buffer[0] = 0x0F;
+  write_buffer[1] = read_buffer[0xF] & ~((1<<1) /* A2F*/ | (1<<0) /* A1F*/);
+  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
   rtc_ds3231_data_s new_data = {0};
 
@@ -140,6 +150,15 @@ void rtc_ds3231_read()
   critical_section_enter_blocking(&context.critical_section);
   context.data = new_data;
   critical_section_exit(&context.critical_section);
+
+  if(new_data.alarm1_triggered && (context.alarm1_cb != nullptr))
+  {
+    context.alarm1_cb(context.alarm1_user_data_ptr);
+  }
+  if(new_data.alarm2_triggered && (context.alarm2_cb != nullptr))
+  {
+    context.alarm2_cb(context.alarm2_user_data_ptr);
+  }
 }
 
 void rtc_ds3231_set(const seismometer_time_t time)
@@ -193,4 +212,15 @@ void rtc_ds3231_get_time(seismometer_time_s *time)
   if(data_copy.century==true) { time->tm_year += 100; }
   time->tm_wday  = ((data_copy.day-1)  % 7);   /* 0-6 */
   time->tm_isdst = false;                     /* no DST */
+}
+
+void rtc_ds3231_set_alarm1_cb(rtc_ds3231_alarm_cb cb, void* user_data_ptr)
+{
+  context.alarm1_cb            = cb;
+  context.alarm1_user_data_ptr = user_data_ptr;
+}
+void rtc_ds3231_set_alarm2_cb(rtc_ds3231_alarm_cb cb, void* user_data_ptr)
+{
+  context.alarm2_cb            = cb;
+  context.alarm2_user_data_ptr = user_data_ptr;
 }
