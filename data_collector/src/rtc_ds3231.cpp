@@ -85,7 +85,9 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
   //Register 0x0E – Control Register
   write_buffer[0] = 0x0E;
   /* Configure interrupts for Alarm 1*/
-  write_buffer[1] = (1<<2) /*INTCN*/ | (1<<0) /*A1IE*/;
+//  write_buffer[1] = (1<<2) /*INTCN*/ | (1<<0) /*A1IE*/;
+  /* Configure 1Hz square wave and register for Alarm 1*/
+  write_buffer[1] = (1<<0) /*A1IE*/;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x0F - Status/Control Register
   write_buffer[0] = 0x0F;
