@@ -6,6 +6,7 @@
 #include <pico/sem.h>
 
 #include "adc_manager.hpp"
+#include "rtc_ds3231.hpp"
 #include "mpu-6500.hpp"
 #include "sampler.hpp"
 #include "seismometer_utils.hpp"
@@ -73,6 +74,10 @@ void sampler_thread_main()
 
   printf("Starting sample timer.\n");
   assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_semaphore, &sample_timer));
+
+
+  printf("Reading RTC.\n");
+  rtc_ds3231_read();
 
   sample_index_t sample_index = 0;
   while (1)

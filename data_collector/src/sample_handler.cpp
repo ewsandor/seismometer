@@ -86,6 +86,7 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
   log_sample(SAMPLE_LOG_ACCEL_Z_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample_dc_offset_removed());
   log_sample(SAMPLE_LOG_ACCEL_M_FILTERED, sample->index, &sample->time, acceleration_filter_m.get_filtered_sample_dc_offset_removed());
 
+#ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
   printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
@@ -94,6 +95,7 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
     ((double)sample->acceleration.y)/1000,
     ((double)sample->acceleration.z)/1000,
     ((double)acceleration_magnitude)/1000);
+#endif
 
   last_sample_time = sample->time;
 }
@@ -104,6 +106,7 @@ static void accelerometer_temperature_sample_handler(const seismometer_sample_s 
   assert(SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE == sample->type);
   static absolute_time_t last_sample_time = {0};
 
+#ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
   printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3fC\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
@@ -111,6 +114,7 @@ static void accelerometer_temperature_sample_handler(const seismometer_sample_s 
     ((double)sample->temperature)/1000);
 
   log_sample(SAMPLE_LOG_ACCEL_TEMP, sample->index, &sample->time, sample->temperature);
+#endif
 
   last_sample_time = sample->time;
 }
@@ -129,12 +133,14 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
   assert(SEISMOMETER_SAMPLE_TYPE_PENDULUM == sample->type);
   static absolute_time_t last_sample_time = {0};
 
+#ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
   printf("i: %6u hz: %7.3f mean hz: %7.3f - : 10x %6.3f 100x %6.3fV\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
     ((double)sample->pendulum.x10 )/1000,
     ((double)sample->pendulum.x100)/1000);
+#endif
 
   log_sample(SAMPLE_LOG_PENDULUM_10X,  sample->index, &sample->time, sample->pendulum.x10 );
   log_sample(SAMPLE_LOG_PENDULUM_100X, sample->index, &sample->time, sample->pendulum.x100);

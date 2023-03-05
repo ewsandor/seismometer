@@ -11,6 +11,7 @@
 
 #include "mpu-6500.hpp"
 #include "adc_manager.hpp"
+#include "rtc_ds3231.hpp"
 #include "sample_handler.hpp"
 #include "sampler.hpp"
 #include "seismometer_config.hpp"
@@ -126,6 +127,7 @@ void init()
   printf("Delaying for USB connection...\n");
   sleep_ms(TIME_S_TO_MS(5));
   #endif
+  error_state_init();
 }
 
 void boot()
@@ -140,7 +142,6 @@ void boot()
   printf("Starting boot.\n");
   watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
   printf("Enabled %u ms watchdog.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
-  error_state_init();
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
@@ -151,6 +152,8 @@ void boot()
   mpu_6500_init(i2c0);
   watchdog_update();
 //  mpu_6500_calibrate();
+  watchdog_update();
+  rtc_ds3231_init(i2c0);
   watchdog_update();
   adc_manager_init(ADC_CH_TO_MASK(ADC_CH_PENDULUM_10X) | ADC_CH_TO_MASK(ADC_CH_PENDULUM_100X));
   watchdog_update();
@@ -174,9 +177,16 @@ int main()
   watchdog_update();
 
   set_sample_handler_epoch(get_absolute_time());
+
   while(1)
   {
-    status_led_update(error_state_get() == 0);
+    error_state_mask_t error_state = error_state_get();
+    status_led_update(error_state==0);
+    if(error_state != 0) 
+    {
+      printf("ERROR STATE 0x%x\n", error_state);
+    }
+
     seismometer_sample_s sample;
     printf("Queue length %u\n", queue_get_level(&sample_queue));
     watchdog_update();
