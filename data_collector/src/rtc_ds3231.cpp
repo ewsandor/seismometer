@@ -31,19 +31,25 @@ typedef struct
 
 typedef struct 
 {
-  i2c_inst_t          *i2c_inst             = nullptr;
-  critical_section_t   critical_section     = {0};
-  rtc_ds3231_data_s    data                 = {0};
-  rtc_ds3231_alarm_cb  alarm1_cb            = nullptr;
- void                 *alarm1_user_data_ptr = nullptr;
-  rtc_ds3231_alarm_cb  alarm2_cb            = nullptr;
- void                 *alarm2_user_data_ptr = nullptr;
+  i2c_inst_t          *i2c_inst;
+  critical_section_t   critical_section;
+  rtc_ds3231_data_s    data;
+  rtc_ds3231_alarm_cb  alarm1_cb;
+ void                 *alarm1_user_data_ptr;
+  rtc_ds3231_alarm_cb  alarm2_cb;
+ void                 *alarm2_user_data_ptr;
 
 } rtc_ds3231_s;
 
 static rtc_ds3231_s context = 
 {
-  .i2c_inst = nullptr, 
+  .i2c_inst             = nullptr,
+  .critical_section     = {0},
+  .data                 = {0},
+  .alarm1_cb            = nullptr,
+  .alarm1_user_data_ptr = nullptr,
+  .alarm2_cb            = nullptr,
+  .alarm2_user_data_ptr = nullptr,
 };
 
 
@@ -108,29 +114,17 @@ void rtc_ds3231_read()
   write_buffer[1] = read_buffer[0xF] & ~((1<<1) /* A2F*/ | (1<<0) /* A1F*/);
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
+  /* Parse new data */
   rtc_ds3231_data_s new_data = {0};
-
   new_data.seconds = (read_buffer[0] & 0xF) + (((read_buffer[0]>>4) & 0x7)*10);
   new_data.minutes = (read_buffer[1] & 0xF) + (((read_buffer[1]>>4) & 0x7)*10);
   new_data.hours   = (read_buffer[2] & 0xF);
-  if(0 != (read_buffer[2] & (1<<4)))
-  {
-    /* Handle 10-hour bit*/
-    new_data.hours += 10;
-  }
+  if(0 != (read_buffer[2] & (1<<4)))   { /* Handle 10-hour bit*/         new_data.hours += 10; }
   if(0 != (read_buffer[2] & (1<<5)))
   {
     /* Handle 20-Hour/PM bit */
-    if(0 == (read_buffer[2] & (1<<6)))
-    {
-      /* 24-Hour Mode, 20-Hour bit */
-      new_data.hours += 20;
-    }
-    else
-    {
-      /* 12-Hour Mode, PM bit */
-      new_data.hours += 12;
-    }
+    if(0 == (read_buffer[2] & (1<<6))) { /* 24-Hour Mode, 20-Hour bit */ new_data.hours += 20; }
+    else                               { /* 12-Hour Mode, PM bit */      new_data.hours += 12; }
   }
   new_data.day     = (read_buffer[3] & 0x7);
   new_data.date    = (read_buffer[4] & 0xF) + (((read_buffer[4] >> 4) & 0x3)*10);
@@ -147,10 +141,12 @@ void rtc_ds3231_read()
   new_data.temperature_fraction = (read_buffer[0x12]>>6);
   error_state_update(ERROR_STATE_RTC_NOT_SET, new_data.oscillator_stopped);
 
+  /* Commit new data */
   critical_section_enter_blocking(&context.critical_section);
   context.data = new_data;
   critical_section_exit(&context.critical_section);
 
+  /* Handle alarms */
   if(new_data.alarm1_triggered && (context.alarm1_cb != nullptr))
   {
     context.alarm1_cb(context.alarm1_user_data_ptr);
@@ -182,9 +178,9 @@ void rtc_ds3231_set(const seismometer_time_t time)
   write_buffer[1+0x0]=((time_s.tm_sec%10)  & 0xF) | (((time_s.tm_sec/10) & 0x7)<<4);
   write_buffer[1+0x1]=((time_s.tm_min%10)  & 0xF) | (((time_s.tm_min/10) & 0x7)<<4);
   write_buffer[1+0x2]=((time_s.tm_hour%10) & 0xF);
-  if(time_s.tm_hour>=10) { write_buffer[1+0x2] |= (1<<4); }
-  if(time_s.tm_hour>=20) { write_buffer[1+0x2] |= (1<<5); }
-  write_buffer[1+0x3]=((time_s.tm_wday+1) & 0x7);
+  if      (time_s.tm_hour>=20) { write_buffer[1+0x2] |= (1<<5); }
+  else if (time_s.tm_hour>=10) { write_buffer[1+0x2] |= (1<<4); }
+  write_buffer[1+0x3]=((time_s.tm_wday+1)  & 0x7);
   write_buffer[1+0x4]=((time_s.tm_mday%10) & 0xF) | (((time_s.tm_mday/10) & 0x3)<<4);
   write_buffer[1+0x5]=(((time_s.tm_mon+1)%10)  & 0xF) | ((((time_s.tm_mon+1)/10)  & 0x1)<<4);
   if(time_s.tm_year>=100){ write_buffer[1+0x5] |= (1<<7); }
