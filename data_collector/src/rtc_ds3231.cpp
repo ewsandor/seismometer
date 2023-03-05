@@ -142,6 +142,38 @@ void rtc_ds3231_read()
   critical_section_exit(&context.critical_section);
 }
 
+void rtc_ds3231_set(const seismometer_time_t time)
+{
+  seismometer_time_s time_s;
+  seismometer_time_t_to_time_s(&time, &time_s);
+
+  uint8_t write_buffer[8] = {0};
+
+  /* Reset oscillator stopped status to indicate data is good */
+  write_buffer[0] = 0x0F;
+  assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
+  /* Get current status register */
+  assert(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
+  printf("RTC status register 0x%x\n", write_buffer[1]);
+  /* Clear Oscillator Stop Flag */
+  write_buffer[1] &= ~((1<<7) /* OSF */);
+  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+
+  write_buffer[0]=0x00; /* Reset register address to 0x00 */
+  write_buffer[1+0x0]=((time_s.tm_sec%10)  & 0xF) | (((time_s.tm_sec/10) & 0x7)<<4);
+  write_buffer[1+0x1]=((time_s.tm_min%10)  & 0xF) | (((time_s.tm_min/10) & 0x7)<<4);
+  write_buffer[1+0x2]=((time_s.tm_hour%10) & 0xF);
+  if(time_s.tm_hour>=10) { write_buffer[1+0x2] |= (1<<4); }
+  if(time_s.tm_hour>=20) { write_buffer[1+0x2] |= (1<<5); }
+  write_buffer[1+0x3]=((time_s.tm_wday+1) & 0x7);
+  write_buffer[1+0x4]=((time_s.tm_mday%10) & 0xF) | (((time_s.tm_mday/10) & 0x3)<<4);
+  write_buffer[1+0x5]=(((time_s.tm_mon+1)%10)  & 0xF) | ((((time_s.tm_mon+1)/10)  & 0x1)<<4);
+  if(time_s.tm_year>=100){ write_buffer[1+0x5] |= (1<<7); }
+  write_buffer[1+0x6]=((time_s.tm_year%10) & 0xF) | ((((time_s.tm_year/10)%10) & 0xF)<<4);
+  assert(8 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 8, false));
+
+}
+
 void rtc_ds3231_get_time(seismometer_time_s *time)
 {
   assert(time != nullptr);
@@ -151,15 +183,14 @@ void rtc_ds3231_get_time(seismometer_time_s *time)
   critical_section_exit(&context.critical_section);
 
   *time = {0};
-  time->tm_sec   = (data_copy.seconds % 60);  /* 0-59 */
-  time->tm_min   = (data_copy.minutes % 60);  /* 0-59 */
-  time->tm_hour  = (data_copy.hours   % 24);  /* 0-24 */
-  time->tm_mday  = (data_copy.date    % 32);  /* 1-31 */
+  time->tm_sec   = (data_copy.seconds  % 60);  /* 0-59 */
+  time->tm_min   = (data_copy.minutes  % 60);  /* 0-59 */
+  time->tm_hour  = (data_copy.hours    % 24);  /* 0-24 */
+  time->tm_mday  = (data_copy.date     % 32);  /* 1-31 */
   if(time->tm_mday == 0)      { time->tm_mday++; }
-  time->tm_mon   = (data_copy.month   % 12);  /* 0-11 */
-  time->tm_year  = (data_copy.year    % 100); /* 0-199 */
+  time->tm_mon   = ((data_copy.month-1)% 12);  /* 0-11 */
+  time->tm_year  = (data_copy.year     % 100); /* 0-199 */
   if(data_copy.century==true) { time->tm_year += 100; }
-  time->tm_wday  = (data_copy.day     % 8);   /* 1-7 */
-  if(time->tm_wday == 0)      { time->tm_wday++; }
+  time->tm_wday  = ((data_copy.day-1)  % 7);   /* 0-6 */
   time->tm_isdst = false;                     /* no DST */
 }

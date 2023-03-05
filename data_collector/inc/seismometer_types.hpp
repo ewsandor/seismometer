@@ -10,10 +10,10 @@ inline seismometer_time_t seismometer_time_s_to_time_t(seismometer_time_s* time)
 {
   return mktime(time);
 }
-inline void seismometer_time_t_to_time_s(const seismometer_time_t in_time_t, seismometer_time_s* out_time_s)
+inline void seismometer_time_t_to_time_s(const seismometer_time_t *in_time_t, seismometer_time_s* out_time_s)
 {
   assert(out_time_s != nullptr);
-  seismometer_time_s * result = gmtime_r(&in_time_t, out_time_s);
+  seismometer_time_s * result = gmtime_r(in_time_t, out_time_s);
   assert(result == out_time_s);
 }
 
