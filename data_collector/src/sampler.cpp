@@ -123,7 +123,7 @@ void sampler_thread_main()
   assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
 
 //  rtc_ds3231_set(1677996693);
-  rtc_ds3231_read();
+  rtc_ds3231_read(get_absolute_time());
   rtc_ds3231_set_alarm1_cb(rtc_alarm_cb, (void*)1);
 
   /* Initialize GPIO interrupts */
@@ -163,7 +163,7 @@ void sampler_thread_main()
       }
       case SAMPLE_TRIGGER_RTC_TICK:
       {
-        rtc_ds3231_read();
+        rtc_ds3231_read(sample_trigger.timestamp);
         printf("RTC trigger time %u\n", to_ms_since_boot(get_absolute_time()));
         break;
       }

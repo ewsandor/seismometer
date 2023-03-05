@@ -34,6 +34,8 @@ typedef struct
   i2c_inst_t          *i2c_inst;
   critical_section_t   critical_section;
   rtc_ds3231_data_s    data;
+  absolute_time_t      reference_time;
+
   rtc_ds3231_alarm_cb  alarm1_cb;
  void                 *alarm1_user_data_ptr;
   rtc_ds3231_alarm_cb  alarm2_cb;
@@ -46,6 +48,8 @@ static rtc_ds3231_s context =
   .i2c_inst             = nullptr,
   .critical_section     = {0},
   .data                 = {0},
+  .reference_time       = {0},
+
   .alarm1_cb            = nullptr,
   .alarm1_user_data_ptr = nullptr,
   .alarm2_cb            = nullptr,
@@ -101,7 +105,7 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
 
 }
 
-void rtc_ds3231_read()
+void rtc_ds3231_read(absolute_time_t reference)
 {
   /* Reset register address to 0x00 */
   uint8_t write_buffer[2];
@@ -146,6 +150,7 @@ void rtc_ds3231_read()
   /* Commit new data */
   critical_section_enter_blocking(&context.critical_section);
   context.data = new_data;
+  context.reference_time = reference;
   critical_section_exit(&context.critical_section);
 
   /* Handle alarms */
@@ -191,12 +196,13 @@ void rtc_ds3231_set(const seismometer_time_t time)
 
 }
 
-void rtc_ds3231_get_time(seismometer_time_s *time)
+absolute_time_t rtc_ds3231_get_time(seismometer_time_s *time)
 {
   assert(time != nullptr);
 
   critical_section_enter_blocking(&context.critical_section);
   rtc_ds3231_data_s data_copy = context.data;
+  absolute_time_t   ret_val   = context.reference_time;
   critical_section_exit(&context.critical_section);
 
   *time = {0};
@@ -210,6 +216,8 @@ void rtc_ds3231_get_time(seismometer_time_s *time)
   if(data_copy.century==true) { time->tm_year += 100; }
   time->tm_wday  = ((data_copy.day-1)  % 7);   /* 0-6 */
   time->tm_isdst = false;                     /* no DST */
+
+  return ret_val;
 }
 
 void rtc_ds3231_set_alarm1_cb(rtc_ds3231_alarm_cb cb, void* user_data_ptr)
