@@ -184,9 +184,14 @@ void sample_handler(const seismometer_sample_s *sample)
       pendulum_sample_handler(sample);
       break;
     }
+    case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:
+    {
+      printf("RTC Alarm %u!\n", sample->alarm_index);
+      break;
+    }
     default:
     {
-      printf("Unsupported sample type %u!", sample->type);
+      printf("Unsupported sample type %u!\n", sample->type);
       assert(0);
       break;
     }

@@ -87,7 +87,11 @@ static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
 
 static void rtc_alarm_cb(void* user_data_ptr)
 {
-  printf("RTC alarm %u!\n", (unsigned int) user_data_ptr);
+  seismometer_sample_s sample; 
+  memset(&sample, 0, sizeof(seismometer_sample_s));
+  sample.type        = SEISMOMETER_SAMPLE_TYPE_RTC_ALARM;
+  sample.alarm_index = ((unsigned int) user_data_ptr);
+  assert(queue_try_add(args_ptr->sample_queue, &sample));
 }
 
 #define RTC_INTERRUPT_PIN 22
@@ -164,7 +168,9 @@ void sampler_thread_main()
       case SAMPLE_TRIGGER_RTC_TICK:
       {
         rtc_ds3231_read(sample_trigger.timestamp);
-        printf("RTC trigger time %u\n", to_ms_since_boot(get_absolute_time()));
+        printf("RTC trigger time %llu.%06llu\n", 
+          to_us_since_boot(sample_trigger.timestamp)/1000000, 
+          to_us_since_boot(sample_trigger.timestamp)%1000000);
         break;
       }
       default:

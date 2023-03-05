@@ -37,9 +37,9 @@ typedef struct
   absolute_time_t      reference_time;
 
   rtc_ds3231_alarm_cb  alarm1_cb;
- void                 *alarm1_user_data_ptr;
+  void                *alarm1_user_data_ptr;
   rtc_ds3231_alarm_cb  alarm2_cb;
- void                 *alarm2_user_data_ptr;
+  void                *alarm2_user_data_ptr;
 
 } rtc_ds3231_s;
 

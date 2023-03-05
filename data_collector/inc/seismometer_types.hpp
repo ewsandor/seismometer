@@ -52,6 +52,7 @@ typedef enum
   SEISMOMETER_SAMPLE_TYPE_ACCELERATION,
   SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE,
   SEISMOMETER_SAMPLE_TYPE_PENDULUM,
+  SEISMOMETER_SAMPLE_TYPE_RTC_ALARM,
 } seismometer_sample_type_e;
 
 typedef uint sample_index_t;
@@ -67,6 +68,7 @@ typedef struct
     m_celsius_t             temperature;
     acceleration_sample_s   acceleration;
     pendulum_sample_s       pendulum;
+    unsigned int            alarm_index;
   };
 
 } seismometer_sample_s;
