@@ -16,6 +16,7 @@ add_executable(
                 src/filter_coefficients.cpp
                 src/fir_filter.cpp
                 src/mpu-6500.cpp
+                src/rtc_ds3231.cpp
                 src/sample_handler.cpp
                 src/sampler.cpp
                 src/seismometer.cpp

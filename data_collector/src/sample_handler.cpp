@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdio>
 
+#include <pico/time.h>
+
 #include "filter_coefficients.hpp"
 #include "fir_filter.hpp"
 #include "sample_handler.hpp"

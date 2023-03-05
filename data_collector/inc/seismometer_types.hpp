@@ -1,7 +1,21 @@
 #ifndef __SEISMOMETER_TYPES_HPP__
 #define __SEISMOMETER_TYPES_HPP__
+#include <cassert>
+#include <ctime>
 
-#include <pico/time.h>
+/* Time Types */
+typedef struct tm seismometer_time_s;
+typedef time_t    seismometer_time_t;
+inline seismometer_time_t seismometer_time_s_to_time_t(seismometer_time_s* time)
+{
+  return mktime(time);
+}
+inline void seismometer_time_t_to_time_s(const seismometer_time_t in_time_t, seismometer_time_s* out_time_s)
+{
+  assert(out_time_s != nullptr);
+  seismometer_time_s * result = gmtime_r(&in_time_t, out_time_s);
+  assert(result == out_time_s);
+}
 
 /* Frequency in milli-Hz */
 typedef uint m_hz_t;
