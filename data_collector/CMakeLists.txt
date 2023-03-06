@@ -35,6 +35,9 @@ include_directories(seismometer inc)
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(seismometer pico_multicore pico_stdlib hardware_adc hardware_i2c)
 
+add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
+target_link_libraries(seismometer FatFs_SPI)
+
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(seismometer)
 
