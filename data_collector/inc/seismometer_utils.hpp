@@ -31,11 +31,19 @@ typedef enum
 {
   ERROR_STATE_BOOT,
   ERROR_STATE_RTC_NOT_SET,
+  ERROR_STATE_SD_SPI_0_NOT_MOUNTED,
+  ERROR_STATE_SD_SPI_0_FILE_ERROR,
   ERROR_STATE_MAX,
 
 } error_state_e;
 typedef unsigned int error_state_mask_t;
-void error_state_update(error_state_e state, bool in_error);
+void               error_state_update(const error_state_e state, const bool in_error);
 error_state_mask_t error_state_get();
+inline bool        error_state_check(const error_state_e state)
+{
+  assert(state < ERROR_STATE_MAX);
+  error_state_mask_t error_state = error_state_get();
+  return (0 != (error_state & (1<<state)));
+}
 
 #endif /*__SEISMOMETER_UTILS_HPP__*/

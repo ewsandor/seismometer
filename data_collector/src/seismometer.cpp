@@ -47,13 +47,13 @@ void smps_control_power_save(smps_control_client_e client)
 }
 
 critical_section_t error_state_critical_section = {0};
-static unsigned int error_state_mask = (1<<ERROR_STATE_BOOT);
+static unsigned int error_state_mask = (1<<ERROR_STATE_BOOT) | (1<<ERROR_STATE_SD_SPI_0_NOT_MOUNTED);
 static void error_state_init()
 {
   critical_section_init(&error_state_critical_section);
   printf("Initialized error state manager.\n");
 }
-void error_state_update(error_state_e state, bool in_error)
+void error_state_update(const error_state_e state, const bool in_error)
 {
   critical_section_enter_blocking(&error_state_critical_section);
   if(in_error == true)
@@ -181,6 +181,8 @@ void boot()
   sem_acquire_blocking(&boot_semaphore);
   watchdog_update();
   sd_card_spi_init();
+  watchdog_update();
+  sd_card_spi_mount(0);
   watchdog_update();
   error_state_update(ERROR_STATE_BOOT, false);
   printf("Boot complete!\n");
