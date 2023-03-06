@@ -71,8 +71,8 @@ void sd_card_spi_init()
   if (FR_OK == fr)
   {
     FIL fil;
-//    f_mkdir("foo");
-    const char* const filename = "filename.txt";
+    f_mkdir("0:/foo");
+    const char* const filename = "foo/filename.txt";
     fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
     if (FR_OK != fr && FR_EXIST != fr)
         panic("f_open(%s) error: %s (%d)\n", filename, FRESULT_str(fr), fr);
