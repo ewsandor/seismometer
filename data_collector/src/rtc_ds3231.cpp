@@ -2,6 +2,7 @@
 #include <cstdio>
 
 #include <hardware/i2c.h>
+#include <hardware/rtc.h>
 #include <pico/sync.h>
 
 #include "rtc_ds3231.hpp"
@@ -146,6 +147,19 @@ void rtc_ds3231_read(absolute_time_t reference)
   new_data.temperature          = (read_buffer[0x11]);
   new_data.temperature_fraction = (read_buffer[0x12]>>6);
   error_state_update(ERROR_STATE_RTC_NOT_SET, new_data.oscillator_stopped);
+
+  /* Match built in RTC to battery backed RTC */
+  datetime_t pico_rtc_time = 
+  {
+    .year  = (1900+(int16_t)new_data.year)+(new_data.century?100:0), ///< 0..4095
+    .month = (new_data.month),              ///< 1..12, 1 is January
+    .day   = (new_data.date),               ///< 1..28,29,30,31 depending on month
+    .dotw  = (new_data.day-1),              ///< 0..6, 0 is Sunday
+    .hour  = (new_data.hours),              ///< 0..23
+    .min   = (new_data.minutes),            ///< 0..59
+    .sec   = (new_data.seconds),            ///< 0..59
+  };
+  assert(rtc_set_datetime(&pico_rtc_time));
 
   /* Commit new data */
   critical_section_enter_blocking(&context.critical_section);

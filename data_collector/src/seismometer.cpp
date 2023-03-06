@@ -168,8 +168,6 @@ void boot()
   watchdog_update();
   adc_manager_init(ADC_CH_TO_MASK(ADC_CH_PENDULUM_10X) | ADC_CH_TO_MASK(ADC_CH_PENDULUM_100X));
   watchdog_update();
-  sd_card_spi_init();
-  watchdog_update();
   printf("Initializing sample queue\n");
   queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISMOMETER_SAMPLE_QUEUE_SIZE);
   watchdog_update();
@@ -181,6 +179,8 @@ void boot()
   sampler_thread_pass_args(&sampler_thead_args);
   multicore_launch_core1(sampler_thread_main);
   sem_acquire_blocking(&boot_semaphore);
+  watchdog_update();
+  sd_card_spi_init();
   watchdog_update();
   error_state_update(ERROR_STATE_BOOT, false);
   printf("Boot complete!\n");

@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cstdio>
 
+#include <hardware/rtc.h>
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
 
@@ -126,6 +127,8 @@ void sampler_thread_main()
   printf("Starting sample timer.\n");
   assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
 
+  /* Initialize the built in RTC */
+  rtc_init();
 //  rtc_ds3231_set(1678047615);
   rtc_ds3231_read(get_absolute_time());
   rtc_ds3231_set_alarm1_cb(rtc_alarm_cb, (void*)1);
