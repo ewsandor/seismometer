@@ -19,6 +19,7 @@ add_executable(
                 src/rtc_ds3231.cpp
                 src/sample_handler.cpp
                 src/sampler.cpp
+                src/sd_card_spi.cpp
                 src/seismometer.cpp
               )
 

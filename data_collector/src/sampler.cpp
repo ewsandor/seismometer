@@ -140,6 +140,8 @@ void sampler_thread_main()
   /* Enable GPIO Interrupts */
   irq_set_enabled(IO_IRQ_BANK0, true);
 
+  sem_release(args_ptr->boot_semaphore);
+
   sample_index_t sample_index = 0;
   while (1)
   {

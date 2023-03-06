@@ -14,6 +14,7 @@
 #include "rtc_ds3231.hpp"
 #include "sample_handler.hpp"
 #include "sampler.hpp"
+#include "sd_card_spi.hpp"
 #include "seismometer_config.hpp"
 #include "seismometer_utils.hpp"
 
@@ -136,6 +137,10 @@ void init()
   printf("Delaying for USB connection...\n");
   sleep_ms(TIME_S_TO_MS(5));
   #endif
+  printf( "\n\n\n\n"
+          "##################################################"
+          "##################################################"
+          "##################################################\n" );
   error_state_init();
 }
 
@@ -143,11 +148,7 @@ void boot()
 {
   if (watchdog_caused_reboot()) 
   {
-    printf("\n\n\n"
-          "##################################################"
-          "##################################################"
-          "##################################################\n"
-          "Rebooted by Watchdog!\n");
+    printf("Reset by Watchdog!\n");
   } 
   printf("Starting boot.\n");
   watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
@@ -167,13 +168,19 @@ void boot()
   watchdog_update();
   adc_manager_init(ADC_CH_TO_MASK(ADC_CH_PENDULUM_10X) | ADC_CH_TO_MASK(ADC_CH_PENDULUM_100X));
   watchdog_update();
+  sd_card_spi_init();
+  watchdog_update();
   printf("Initializing sample queue\n");
   queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISMOMETER_SAMPLE_QUEUE_SIZE);
   watchdog_update();
   printf("Starting sampler thread.\n");
-  sampler_thead_args.sample_queue = &sample_queue;
+  semaphore_t boot_semaphore = {0};
+  sem_init(&boot_semaphore, 0, 1);
+  sampler_thead_args.boot_semaphore = &boot_semaphore;
+  sampler_thead_args.sample_queue   = &sample_queue;
   sampler_thread_pass_args(&sampler_thead_args);
   multicore_launch_core1(sampler_thread_main);
+  sem_acquire_blocking(&boot_semaphore);
   watchdog_update();
   error_state_update(ERROR_STATE_BOOT, false);
   printf("Boot complete!\n");
