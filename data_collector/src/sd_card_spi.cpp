@@ -7,6 +7,7 @@
 #include <f_util.h>
 #include <hw_config.h>
 
+#include "sd_card_spi.hpp"
 #include "seismometer_utils.hpp"
 
 #define SPI_0_SCK_PIN  PICO_DEFAULT_SPI_SCK_PIN
@@ -22,14 +23,13 @@ static spi_t spi[] =
     .sck_gpio                 = SPI_0_SCK_PIN,
     //.baud_rate                = (12500*1000),
     .baud_rate                = (25*1000*1000),
-    .set_drive_strength       = true,
+    .set_drive_strength       = false,
     .mosi_gpio_drive_strength = GPIO_DRIVE_STRENGTH_12MA,
     .sck_gpio_drive_strength  = GPIO_DRIVE_STRENGTH_12MA,
   }
 };
 
 #define SD_CARD_0_CS_PIN 20
-#define SD_CARD_0_CD_PIN 15
 
 static sd_card_t sd_card[] = 
 {
@@ -40,7 +40,7 @@ static sd_card_t sd_card[] =
     .use_card_detect        =  true,
     .card_detect_gpio       =  SD_CARD_0_CD_PIN,
     .card_detected_true     =  1,
-    .set_drive_strength     =  true,
+    .set_drive_strength     =  false,
     .ss_gpio_drive_strength =  GPIO_DRIVE_STRENGTH_12MA,
   },
 };
@@ -108,7 +108,7 @@ const char *sd_card_spi_mount (const unsigned int sd_index)
 
   return ret_val;
 }
-bool sd_card_spi_umount(const unsigned int sd_index)
+bool sd_card_spi_unmount(const unsigned int sd_index)
 {
   bool ret_val = false;
 

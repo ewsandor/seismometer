@@ -185,10 +185,6 @@ void boot()
   watchdog_update();
   sd_card_spi_init();
   watchdog_update();
-  sd_card_spi_mount(0);
-  watchdog_update();
-  sample_file_open();
-  watchdog_update();
   /* Unblock sampler task to start sampling */
   sem_release(&boot_semaphore);
   error_state_update(ERROR_STATE_BOOT, false);

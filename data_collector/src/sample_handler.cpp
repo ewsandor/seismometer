@@ -4,12 +4,14 @@
 
 #include <f_util.h>
 #include <ff.h>
+#include <hardware/gpio.h>
 #include <pico/time.h>
 
 #include "filter_coefficients.hpp"
 #include "fir_filter.hpp"
 #include "rtc_ds3231.hpp"
 #include "sample_handler.hpp"
+#include "sd_card_spi.hpp"
 #include "seismometer_utils.hpp"
 
 typedef enum
@@ -47,7 +49,7 @@ void sample_file_open()
   if (FR_OK == fr || FR_EXIST == fr)
   {
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, false);
-    puts("Opened sample data file.");
+    printf("Opened sample data file '%s'.\n", filename);
 
     char buffer[64] = {'\0'};
     assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "File opened at %FT%T.", &time_s));
@@ -268,27 +270,40 @@ void sample_handler(const seismometer_sample_s *sample)
       char time_string[128];
       strftime(time_string, 128, "%FT%T", &time_s);
       printf("%u - RTC %s trigger time %llu.%06llu\n", 
-        to_ms_since_boot(get_absolute_time()),
-        time_string,
-        to_us_since_boot(reference_time)/1000000, 
-        to_us_since_boot(reference_time)%1000000);
+      to_ms_since_boot(get_absolute_time()),
+      time_string,
+      to_us_since_boot(reference_time)/1000000, 
+      to_us_since_boot(reference_time)%1000000);
 
-      if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+      if(error_state_check(ERROR_STATE_SD_SPI_0_NOT_MOUNTED))
       {
-        sample_file_open();
+        sd_card_spi_mount(0);
       }
-      else
+      if(!error_state_check(ERROR_STATE_SD_SPI_0_NOT_MOUNTED))
       {
-        if(FR_OK != f_sync(&sample_data_file))
+        if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
         {
-          sample_file_close();
+          sample_file_open();
+        }
+        else
+        {
+          if(FR_OK != f_sync(&sample_data_file))
+          {
+            sample_file_close();
+            sd_card_spi_unmount(0);
+          }
         }
       }
+
       break;
     }
     case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:
     {
       printf("RTC Alarm %u!\n", sample->alarm_index);
+      if(2 == sample->alarm_index)
+      {
+        sample_file_close();
+      }
       break;
     }
     default:
