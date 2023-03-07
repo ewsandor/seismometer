@@ -48,12 +48,13 @@ build-fedora:
     - docker
     - x86_64
   script:
+    - pwd
     - echo "Installing dependencies..."
     - dnf install -y cmake arm-none-eabi-gcc-cs-c++ git
     - echo "Installing dependencies complete."
     - echo "Pulling Pi Pico SDK..."
     - git clone -b 1.5.0 --single-branch https://github.com/raspberrypi/pico-sdk.git
-    - export PICO_SDK_PATH=/builds/edward/pico-sdk
+    - export PICO_SDK_PATH=./pico-sdk
     - *build_step
   artifacts:
     paths:
