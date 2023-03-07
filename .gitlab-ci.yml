@@ -50,7 +50,7 @@ build-fedora:
     - x86_64
   script:
     - echo "Installing dependencies..."
-    - dnf install -y cmake arm-none-eabi-gcc-cs-c++ arm-none-eabi-newlib git
+    - dnf install -y cmake gcc-c++ arm-none-eabi-gcc-cs-c++ arm-none-eabi-newlib git
     - echo "Installing dependencies complete."
     - echo "Pulling Pi Pico SDK..."
     - cd /builds/edward/
