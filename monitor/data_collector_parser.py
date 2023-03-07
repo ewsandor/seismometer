@@ -8,7 +8,7 @@ def twos_complement(hexstr, bits):
 
 def parse_seismometer_line(database, line):
   line_split = line.split('|')
-  if((5 == len(line_split)) and ('SAMPLE' == line_split[0])):
+  if((5 == len(line_split)) and ('S' == line_split[0])):
     sample = {
       'key'      : int(line_split[1],16),
       'index'    : int(line_split[2],16),

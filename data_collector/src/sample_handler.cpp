@@ -46,13 +46,13 @@ void sample_file_open()
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
 
   FRESULT fr = f_open(&sample_data_file, filename, FA_OPEN_APPEND | FA_WRITE);
-  if (FR_OK == fr || FR_EXIST == fr)
+  if (FR_OK == fr)
   {
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, false);
     printf("Opened sample data file '%s'.\n", filename);
 
     char buffer[64] = {'\0'};
-    assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "File opened at %FT%T.", &time_s));
+    assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "I|Opened at %FT%T.", &time_s));
     
     if(f_putc('\n', &sample_data_file) < 0)
     {
@@ -88,8 +88,8 @@ void sample_file_close()
 
 static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
 {
-  char buffer[64];
-  snprintf(buffer, sizeof(buffer), "SAMPLE|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
+  char buffer[48];
+  snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
   puts(buffer);
 
   if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))

@@ -68,23 +68,6 @@ void sd_card_spi_init()
   bi_decl(bi_3pins_with_func(SPI_0_MOSI_PIN, SPI_0_MISO_PIN, SPI_0_SCK_PIN, GPIO_FUNC_SPI));
   bi_decl(bi_1pin_with_name(SD_CARD_0_CS_PIN,  "SD Card SPI Chip Select Output"));
   bi_decl(bi_1pin_with_name(SD_CARD_0_CD_PIN,  "SD Card Chip Detect Input"));
-
-/*
-  sd_card_t *pSD = &sd_card[0];
-  FIL fil;
-  const char* const filename = "filename.txt";
-  fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
-  if (FR_OK != fr && FR_EXIST != fr)
-      panic("f_open(%s) error: %s (%d)\n", filename, FRESULT_str(fr), fr);
-  if (f_printf(&fil, "Hello, world!\n") < 0) {
-      printf("f_printf failed\n");
-  }
-  fr = f_close(&fil);
-  if (FR_OK != fr) {
-      printf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
-  }
-  f_unmount(pSD->pcName);
-  */
 }
 const char *sd_card_spi_mount (const unsigned int sd_index)
 {
