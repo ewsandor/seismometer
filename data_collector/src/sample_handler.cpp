@@ -49,8 +49,18 @@ void sample_file_open()
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, false);
     char buffer[64] = {'\0'};
     assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "File opened at %FT%T.", &time_s));
-    f_putc('\n', &sample_data_file);
-    f_puts(buffer, &sample_data_file);
+    
+    if(f_putc('\n', &sample_data_file) < 0)
+    {
+      error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+    }
+    if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+    {
+      if(f_puts(buffer, &sample_data_file) < 0)
+      {
+        error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+      }
+    }
   }
   else
   {
@@ -72,8 +82,21 @@ static inline void log_sample(sample_log_key_e key, sample_index_t index, const 
   char buffer[64];
   snprintf(buffer, sizeof(buffer), "SAMPLE|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
   puts(buffer);
-  f_putc('\n', &sample_data_file);
-  f_puts(buffer, &sample_data_file);
+
+  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+  {
+    if(f_putc('\n', &sample_data_file) < 0)
+    {
+      sample_file_close();
+    }
+  }
+  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+  {
+    if(f_puts(buffer, &sample_data_file) < 0)
+    {
+      sample_file_close();
+    }
+  }
 }
 
 static absolute_time_t epoch = {0};
@@ -242,7 +265,18 @@ void sample_handler(const seismometer_sample_s *sample)
         time_string,
         to_us_since_boot(reference_time)/1000000, 
         to_us_since_boot(reference_time)%1000000);
-      f_sync(&sample_data_file);
+
+      if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+      {
+        sample_file_open();
+      }
+      else
+      {
+        if(FR_OK != f_sync(&sample_data_file))
+        {
+          sample_file_close();
+        }
+      }
       break;
     }
     case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:
