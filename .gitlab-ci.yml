@@ -28,8 +28,8 @@ stages:          # List of stages for jobs, and their order of execution
 
 .build_step: &build_step
   - echo "Compiling the code..."
-  - git submodule update --init --recursive
   - cd data_collector
+  - git submodule update --init --recursive
   - mkdir build
   - cd build
   - cmake ..
@@ -50,7 +50,7 @@ build-fedora:
     - x86_64
   script:
     - echo "Installing dependencies..."
-    - dnf install -y cmake arm-none-eabi-gcc-cs-c++ git
+    - dnf install -y cmake arm-none-eabi-gcc-cs-c++ arm-none-eabi-newlib git
     - echo "Installing dependencies complete."
     - echo "Pulling Pi Pico SDK..."
     - cd /builds/edward/
