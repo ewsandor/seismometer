@@ -49,7 +49,7 @@ build-fedora:
     - x86_64
   script:
     - echo "Installing dependencies..."
-    - dnf install -y cmake arm-none-eabi-gcc-cs-c++
+    - dnf install -y cmake arm-none-eabi-gcc-cs-c++ git
     - echo "Installing dependencies complete."
     - echo "Pulling Pi Pico SDK..."
     - git clone -b 1.5.0 --single-branch https://github.com/raspberrypi/pico-sdk.git
