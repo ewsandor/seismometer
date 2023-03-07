@@ -86,10 +86,10 @@ void sample_file_close()
   }
 }
 
-static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
+static inline void log_sample(sample_log_key_e key, sample_index_t index, uint64_t timestamp, int64_t data)
 {
   char buffer[48];
-  snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
+  snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, timestamp, data);
   puts(buffer);
 
   if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
@@ -155,14 +155,15 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
   acceleration_filter_z.push_sample(sample->acceleration.z);
   acceleration_filter_m.push_sample(acceleration_magnitude);
 
-  log_sample(SAMPLE_LOG_ACCEL_X,          sample->index, &sample->time, sample->acceleration.x);
-  log_sample(SAMPLE_LOG_ACCEL_Y,          sample->index, &sample->time, sample->acceleration.y);
-  log_sample(SAMPLE_LOG_ACCEL_Z,          sample->index, &sample->time, sample->acceleration.z);
-  log_sample(SAMPLE_LOG_ACCEL_M,          sample->index, &sample->time, acceleration_magnitude);
-  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, &sample->time, acceleration_filter_x.get_filtered_sample_dc_offset_removed());
-  log_sample(SAMPLE_LOG_ACCEL_Y_FILTERED, sample->index, &sample->time, acceleration_filter_y.get_filtered_sample_dc_offset_removed());
-  log_sample(SAMPLE_LOG_ACCEL_Z_FILTERED, sample->index, &sample->time, acceleration_filter_z.get_filtered_sample_dc_offset_removed());
-  log_sample(SAMPLE_LOG_ACCEL_M_FILTERED, sample->index, &sample->time, acceleration_filter_m.get_filtered_sample_dc_offset_removed());
+  uint64_t timestamp = rtc_ds3231_absolute_time_to_epoch_ms(sample->time);
+  log_sample(SAMPLE_LOG_ACCEL_X,          sample->index, timestamp, sample->acceleration.x);
+  log_sample(SAMPLE_LOG_ACCEL_Y,          sample->index, timestamp, sample->acceleration.y);
+  log_sample(SAMPLE_LOG_ACCEL_Z,          sample->index, timestamp, sample->acceleration.z);
+  log_sample(SAMPLE_LOG_ACCEL_M,          sample->index, timestamp, acceleration_magnitude);
+  log_sample(SAMPLE_LOG_ACCEL_X_FILTERED, sample->index, timestamp, acceleration_filter_x.get_filtered_sample_dc_offset_removed());
+  log_sample(SAMPLE_LOG_ACCEL_Y_FILTERED, sample->index, timestamp, acceleration_filter_y.get_filtered_sample_dc_offset_removed());
+  log_sample(SAMPLE_LOG_ACCEL_Z_FILTERED, sample->index, timestamp, acceleration_filter_z.get_filtered_sample_dc_offset_removed());
+  log_sample(SAMPLE_LOG_ACCEL_M_FILTERED, sample->index, timestamp, acceleration_filter_m.get_filtered_sample_dc_offset_removed());
 
 #ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
   printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
@@ -220,8 +221,9 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
     ((double)sample->pendulum.x100)/1000);
 #endif
 
-  log_sample(SAMPLE_LOG_PENDULUM_10X,  sample->index, &sample->time, sample->pendulum.x10 );
-  log_sample(SAMPLE_LOG_PENDULUM_100X, sample->index, &sample->time, sample->pendulum.x100);
+  uint64_t timestamp = rtc_ds3231_absolute_time_to_epoch_ms(sample->time);
+  log_sample(SAMPLE_LOG_PENDULUM_10X,  sample->index, timestamp, sample->pendulum.x10 );
+  log_sample(SAMPLE_LOG_PENDULUM_100X, sample->index, timestamp, sample->pendulum.x100);
 
   pendulum_10x_filter.push_sample (sample->pendulum.x10);
   pendulum_100x_filter.push_sample(sample->pendulum.x100);
@@ -229,11 +231,11 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
   if( (pendulum_100x_filter.get_filtered_sample_dc_offset_removed() >  500) ||
       (pendulum_100x_filter.get_filtered_sample_dc_offset_removed() < -500) )
   {
-    log_sample(SAMPLE_LOG_PENDULUM_FILTERED, sample->index, &sample->time, pendulum_10x_filter.get_filtered_sample_dc_offset_removed()*10);
+    log_sample(SAMPLE_LOG_PENDULUM_FILTERED, sample->index, timestamp, pendulum_10x_filter.get_filtered_sample_dc_offset_removed()*10);
   }
   else
   {
-    log_sample(SAMPLE_LOG_PENDULUM_FILTERED, sample->index, &sample->time, pendulum_100x_filter.get_filtered_sample_dc_offset_removed());
+    log_sample(SAMPLE_LOG_PENDULUM_FILTERED, sample->index, timestamp, pendulum_100x_filter.get_filtered_sample_dc_offset_removed());
   }
 
 

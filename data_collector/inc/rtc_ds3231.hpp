@@ -19,4 +19,6 @@ absolute_time_t rtc_ds3231_get_time(seismometer_time_s *time);
 void            rtc_ds3231_set_alarm1_cb(rtc_ds3231_alarm_cb, void* user_data_ptr);
 void            rtc_ds3231_set_alarm2_cb(rtc_ds3231_alarm_cb, void* user_data_ptr);
 
+uint64_t        rtc_ds3231_absolute_time_to_epoch_ms(absolute_time_t t);
+
 #endif //__RTC_DS3231_HPP__

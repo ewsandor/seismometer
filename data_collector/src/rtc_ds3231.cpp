@@ -258,3 +258,12 @@ void rtc_ds3231_set_alarm2_cb(rtc_ds3231_alarm_cb cb, void* user_data_ptr)
   context.alarm2_cb            = cb;
   context.alarm2_user_data_ptr = user_data_ptr;
 }
+
+uint64_t rtc_ds3231_absolute_time_to_epoch_ms(absolute_time_t t)
+{
+  seismometer_time_s time;
+  absolute_time_t    reference_time = rtc_ds3231_get_time(&time);
+  seismometer_time_t epoch = seismometer_time_s_to_time_t(&time);
+
+  return (TIME_S_TO_MS(epoch) + TIME_US_TO_MS(absolute_time_diff_us(reference_time, t)));
+}
