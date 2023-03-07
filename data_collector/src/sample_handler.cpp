@@ -47,6 +47,8 @@ void sample_file_open()
   if (FR_OK == fr || FR_EXIST == fr)
   {
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, false);
+    puts("Opened sample data file.");
+
     char buffer[64] = {'\0'};
     assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "File opened at %FT%T.", &time_s));
     
@@ -72,7 +74,12 @@ void sample_file_close()
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
 
   FRESULT fr = f_close(&sample_data_file);
-  if (FR_OK != fr) {
+  if (FR_OK == fr)
+  {
+    puts("Closed sample data file.");
+  }
+  else
+  {
     printf("Error (%u) closing sample data file - %s.\n", fr, FRESULT_str(fr));
   }
 }
