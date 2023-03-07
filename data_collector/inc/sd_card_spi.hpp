@@ -1,8 +1,6 @@
 #ifndef __SD_CARD_SPI_HPP__
 #define __SD_CARD_SPI_HPP__
 
-#define SD_CARD_0_CD_PIN 15
-
 void        sd_card_spi_init();
 /* Mount SD card with given index, returns the mount path or NULL if error */
 const char *sd_card_spi_mount (const unsigned int sd_index);

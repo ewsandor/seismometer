@@ -29,6 +29,7 @@ static spi_t spi[] =
   }
 };
 
+#define SD_CARD_0_CD_PIN 15
 #define SD_CARD_0_CS_PIN 20
 
 static sd_card_t sd_card[] = 
