@@ -28,6 +28,7 @@ stages:          # List of stages for jobs, and their order of execution
 
 .build_step: &build_step
   - echo "Compiling the code..."
+  - git submodule update --init --recursive
   - cd data_collector
   - mkdir build
   - cd build
