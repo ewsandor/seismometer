@@ -20,7 +20,8 @@ static spi_t spi[] =
     .miso_gpio                = SPI_0_MISO_PIN,
     .mosi_gpio                = SPI_0_MOSI_PIN,
     .sck_gpio                 = SPI_0_SCK_PIN,
-    .baud_rate                = (12500 * 1000),
+    //.baud_rate                = (12500*1000),
+    .baud_rate                = (25*1000*1000),
     .set_drive_strength       = true,
     .mosi_gpio_drive_strength = GPIO_DRIVE_STRENGTH_12MA,
     .sck_gpio_drive_strength  = GPIO_DRIVE_STRENGTH_12MA,
@@ -102,7 +103,7 @@ const char *sd_card_spi_mount (const unsigned int sd_index)
   }
   else
   {
-    printf("SD SPI error (%u) mounting card %u.\n", fr, sd_index);
+    printf("SD SPI error (%u) mounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
   }
 
   return ret_val;
@@ -124,7 +125,7 @@ bool sd_card_spi_umount(const unsigned int sd_index)
   }
   else
   {
-    printf("SD SPI unmount error (%u) mounting card %u.\n", fr, sd_index);
+    printf("SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
   }
 
   return ret_val;

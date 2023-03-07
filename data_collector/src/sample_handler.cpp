@@ -2,12 +2,15 @@
 #include <cmath>
 #include <cstdio>
 
+#include <f_util.h>
+#include <ff.h>
 #include <pico/time.h>
 
 #include "filter_coefficients.hpp"
 #include "fir_filter.hpp"
 #include "rtc_ds3231.hpp"
 #include "sample_handler.hpp"
+#include "seismometer_utils.hpp"
 
 typedef enum
 {
@@ -26,9 +29,51 @@ typedef enum
   SAMPLE_LOG_PENDULUM_FILTERED,
 } sample_log_key_e;
 
+/* Length of sample data filename not including null character i.e. 'seismometer_2023-03-06.dat\0' */
+#define SAMPLE_DATA_FILENAME_LENGTH 26
+FIL sample_data_file;
+void sample_file_open()
+{
+  /*SAMPLE_DATA_FILENAME_LENGTH+1 for NULL character*/
+  char filename[SAMPLE_DATA_FILENAME_LENGTH+1]  = {'\0'};
+
+  seismometer_time_s time_s;
+  rtc_ds3231_get_time(&time_s);
+  assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(filename, sizeof(filename), "seismometer_%F.dat", &time_s));
+
+  error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+
+  FRESULT fr = f_open(&sample_data_file, filename, FA_OPEN_APPEND | FA_WRITE);
+  if (FR_OK == fr || FR_EXIST == fr)
+  {
+    error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, false);
+    char buffer[64] = {'\0'};
+    assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "File opened at %FT%T.", &time_s));
+    f_putc('\n', &sample_data_file);
+    f_puts(buffer, &sample_data_file);
+  }
+  else
+  {
+    printf("Error (%u) opening sample data file '%s' - %s.\n", fr, filename, FRESULT_str(fr));
+  }
+}
+void sample_file_close()
+{
+  error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+
+  FRESULT fr = f_close(&sample_data_file);
+  if (FR_OK != fr) {
+    printf("Error (%u) closing sample data file - %s.\n", fr, FRESULT_str(fr));
+  }
+}
+
 static inline void log_sample(sample_log_key_e key, sample_index_t index, const absolute_time_t *timestamp, int64_t data)
 {
-  printf("SAMPLE|%02X|%08X|%016llX|%016llX\n", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
+  char buffer[64];
+  snprintf(buffer, sizeof(buffer), "SAMPLE|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, to_us_since_boot(*timestamp), data);
+  puts(buffer);
+  f_putc('\n', &sample_data_file);
+  f_puts(buffer, &sample_data_file);
 }
 
 static absolute_time_t epoch = {0};
@@ -192,10 +237,12 @@ void sample_handler(const seismometer_sample_s *sample)
       assert(absolute_time_diff_us(reference_time, sample->time)==0);
       char time_string[128];
       strftime(time_string, 128, "%FT%T", &time_s);
-      printf("RTC %s trigger time %llu.%06llu\n", 
+      printf("%u - RTC %s trigger time %llu.%06llu\n", 
+        to_ms_since_boot(get_absolute_time()),
         time_string,
         to_us_since_boot(reference_time)/1000000, 
         to_us_since_boot(reference_time)%1000000);
+      f_sync(&sample_data_file);
       break;
     }
     case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:

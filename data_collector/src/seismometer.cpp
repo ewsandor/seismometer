@@ -47,7 +47,9 @@ void smps_control_power_save(smps_control_client_e client)
 }
 
 critical_section_t error_state_critical_section = {0};
-static unsigned int error_state_mask = (1<<ERROR_STATE_BOOT) | (1<<ERROR_STATE_SD_SPI_0_NOT_MOUNTED);
+static error_state_mask_t error_state_mask = (1<<ERROR_STATE_BOOT) | 
+                                             (1<<ERROR_STATE_SD_SPI_0_NOT_MOUNTED) | 
+                                             (1<<ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED);
 static void error_state_init()
 {
   critical_section_init(&error_state_critical_section);
@@ -178,12 +180,17 @@ void boot()
   sampler_thead_args.sample_queue   = &sample_queue;
   sampler_thread_pass_args(&sampler_thead_args);
   multicore_launch_core1(sampler_thread_main);
+  /* Block until inital sampler task setup is complete */
   sem_acquire_blocking(&boot_semaphore);
   watchdog_update();
   sd_card_spi_init();
   watchdog_update();
   sd_card_spi_mount(0);
   watchdog_update();
+  sample_file_open();
+  watchdog_update();
+  /* Unblock sampler task to start sampling */
+  sem_release(&boot_semaphore);
   error_state_update(ERROR_STATE_BOOT, false);
   printf("Boot complete!\n");
 }
@@ -199,6 +206,9 @@ int main()
 
   while(1)
   {
+    watchdog_update();
+
+    /* Handle Error State */
     error_state_mask_t error_state = error_state_get();
     status_led_update(error_state==0);
     if(error_state != 0) 
@@ -206,17 +216,17 @@ int main()
       printf("ERROR STATE 0x%x\n", error_state);
     }
 
+    /* Pop from Sample Queue*/
     seismometer_sample_s sample;
-    printf("Queue length %u\n", queue_get_level(&sample_queue));
-    watchdog_update();
+    unsigned int queue_length = queue_get_level(&sample_queue);
+    if(queue_length >= (SEISMOMETER_SAMPLE_QUEUE_SIZE/2))
+    {
+      printf("%u - Queue length %u\n", to_ms_since_boot(get_absolute_time()), queue_length);
+    }
     queue_remove_blocking(&sample_queue, &sample);
-    sample_handler(&sample);
 
-    seismometer_time_s time_s;
-    rtc_ds3231_get_time(&time_s);
-    char time_string[128];
-    strftime(time_string, 128, "%FT%T", &time_s);
-    printf("%s\n", time_string);
+    /* Handle Sample */
+    sample_handler(&sample);
   }
 
   return 0;

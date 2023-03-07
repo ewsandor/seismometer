@@ -35,6 +35,7 @@ include_directories(seismometer inc)
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(seismometer pico_multicore pico_stdlib hardware_adc hardware_i2c)
 
+add_compile_definitions(FatFs_SPI PRIVATE NO_PICO_LED)
 add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
 target_link_libraries(seismometer FatFs_SPI)
 

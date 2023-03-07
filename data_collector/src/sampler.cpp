@@ -14,7 +14,7 @@
 
 static sample_thread_args_s *args_ptr = nullptr;
 static repeating_timer_t     sample_timer         = {0};
-#define SAMPLE_TRIGGER_QUEUE_SIZE 4
+#define SAMPLE_TRIGGER_QUEUE_SIZE 2
 typedef enum
 {
   SAMPLE_TRIGGER_INVALID,
@@ -124,9 +124,6 @@ void sampler_thread_main()
   printf("Initializing sample trigger queue.\n");
   queue_init(&sample_trigger_queue, sizeof(sample_trigger_s), SAMPLE_TRIGGER_QUEUE_SIZE);
 
-  printf("Starting sample timer.\n");
-  assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
-
   /* Initialize the built in RTC */
   rtc_init();
 //  rtc_ds3231_set(1678047615);
@@ -140,11 +137,16 @@ void sampler_thread_main()
   gpio_set_dir(RTC_INTERRUPT_PIN, false);
   gpio_pull_up(RTC_INTERRUPT_PIN);
   gpio_set_irq_enabled(RTC_INTERRUPT_PIN, GPIO_IRQ_EDGE_RISE, true);
-  /* Enable GPIO Interrupts */
-  irq_set_enabled(IO_IRQ_BANK0, true);
 
+  /* Sampler task initial setup complete, allow logging task to finish setup */
   sem_release(args_ptr->boot_semaphore);
-
+  /* Do not start sampling until unblocked by logging task */
+  sem_acquire_blocking(args_ptr->boot_semaphore);
+  printf("Starting sample timer.\n");
+  assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
+  printf("Enabling sampler GPIO interrupts.\n");
+  irq_set_enabled(IO_IRQ_BANK0, true);
+ 
   sample_index_t sample_index = 0;
   while (1)
   {
