@@ -87,12 +87,26 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
   write_buffer[1] = (1<<7) /* A1M2 - match any day */;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
+  //Register 0x08 – Alarm 1 Minute
+  write_buffer[0] = 0x0b;
+  write_buffer[1] = 0x0 /* Match minute 00 */;
+  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  //Register 0x09 – Alarm 1 Hour
+  write_buffer[0] = 0x0c;
+  write_buffer[1] = (1<<7) /* Match hour 00 */;
+  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  //Register 0x0a – Alarm 1 Day
+  write_buffer[0] = 0x0d;
+  write_buffer[1] = (1<<7) /* Match any day */;
+  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+
+
   //Register 0x0E – Control Register
   write_buffer[0] = 0x0E;
   /* Configure interrupts for Alarm 1*/
 //  write_buffer[1] = (1<<2) /*INTCN*/ | (1<<0) /*A1IE*/;
   /* Configure 1Hz square wave and register for Alarm 1*/
-  write_buffer[1] = (1<<0) /*A1IE*/;
+  write_buffer[1] = (1<<1) /*A2IE*/ | (1<<0) /*A1IE*/;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x0F - Status/Control Register
   write_buffer[0] = 0x0F;

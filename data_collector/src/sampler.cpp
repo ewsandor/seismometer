@@ -129,6 +129,7 @@ void sampler_thread_main()
 //  rtc_ds3231_set(1678047615);
   rtc_ds3231_read(get_absolute_time());
   rtc_ds3231_set_alarm1_cb(rtc_alarm_cb, (void*)1);
+  rtc_ds3231_set_alarm2_cb(rtc_alarm_cb, (void*)2);
 
   /* Initialize GPIO interrupts */
   gpio_set_irq_callback(gpio_irq_callback);
