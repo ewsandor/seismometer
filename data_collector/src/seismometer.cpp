@@ -219,7 +219,7 @@ int main()
     /* Pop from Sample Queue*/
     seismometer_sample_s sample;
     unsigned int queue_length = queue_get_level(&sample_queue);
-    if(queue_length >= (SEISMOMETER_SAMPLE_QUEUE_SIZE/2))
+    if(queue_length >= (3*SEISMOMETER_SAMPLE_QUEUE_SIZE/4))
     {
       printf("%u - Queue length %u\n", to_ms_since_boot(get_absolute_time()), queue_length);
     }
