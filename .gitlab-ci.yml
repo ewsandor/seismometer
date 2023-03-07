@@ -53,6 +53,7 @@ build-fedora:
     - echo "Installing dependencies complete."
     - echo "Pulling Pi Pico SDK..."
     - cd /builds/edward/
+    - rm pico-sdk -r
     - git clone -b 1.5.0 --single-branch https://github.com/raspberrypi/pico-sdk.git
     - export PICO_SDK_PATH=/builds/edward/pico-sdk
     - cd /builds/edward/seismometer/
