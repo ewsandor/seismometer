@@ -100,22 +100,19 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
   assert(sd_index < sd_get_num());
   sd_card_t *pSD = &sd_card[sd_index];
 
-  if(!error_state_check(ERROR_STATE_SD_SPI_0_NOT_MOUNTED))
-  {
-    error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
+   error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
 
-    printf("Unmounting SD SPI %u.\n", sd_index);
-    FRESULT fr = f_unmount(pSD->pcName);
-    if(FR_OK == fr)
-    {
-      ret_val = true;
-    }
-    else
-    {
-      printf("SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
-    }
-    pSD->m_Status |= STA_NOINIT;
+  printf("Unmounting SD SPI %u.\n", sd_index);
+  FRESULT fr = f_unmount(pSD->pcName);
+  if(FR_OK == fr)
+  {
+    ret_val = true;
   }
+  else
+  {
+    printf("SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
+  }
+  pSD->m_Status |= STA_NOINIT;
 
   return ret_val;
 }
