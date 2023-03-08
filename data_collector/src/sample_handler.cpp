@@ -69,6 +69,7 @@ void sample_file_open()
   else
   {
     printf("Error (%u) opening sample data file '%s' - %s.\n", fr, filename, FRESULT_str(fr));
+    sd_card_spi_unmount(0);
   }
 }
 void sample_file_close()
@@ -304,7 +305,9 @@ void sample_handler(const seismometer_sample_s *sample)
       printf("RTC Alarm %u!\n", sample->alarm_index);
       if(2 == sample->alarm_index)
       {
+        /* Close current file and reopen with new datestamp */
         sample_file_close();
+        sample_file_open();
       }
       break;
     }
