@@ -34,6 +34,7 @@ typedef enum
 /* Length of sample data filename not including null character i.e. 'seismometer_2023-03-06.dat\0' */
 #define SAMPLE_DATA_FILENAME_LENGTH 26
 FIL sample_data_file;
+bool sample_data_file_previously_opened = false;
 void sample_file_open()
 {
   /*SAMPLE_DATA_FILENAME_LENGTH+1 for NULL character*/
@@ -46,6 +47,7 @@ void sample_file_open()
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
   FRESULT fr = f_open(&sample_data_file, filename, FA_OPEN_APPEND | FA_WRITE);
+  sample_data_file_previously_opened = true;
   if (FR_OK == fr)
   {
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, false);
@@ -76,14 +78,17 @@ void sample_file_close()
 {
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
-  FRESULT fr = f_close(&sample_data_file);
-  if (FR_OK == fr)
+  if(sample_data_file_previously_opened)
   {
-    puts("Closed sample data file.");
-  }
-  else
-  {
-    printf("Error (%u) closing sample data file - %s.\n", fr, FRESULT_str(fr));
+    FRESULT fr = f_close(&sample_data_file);
+    if (FR_OK == fr)
+    {
+      puts("Closed sample data file.");
+    }
+    else
+    {
+      printf("Error (%u) closing sample data file - %s.\n", fr, FRESULT_str(fr));
+    }
   }
 }
 
