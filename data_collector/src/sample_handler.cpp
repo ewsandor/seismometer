@@ -43,12 +43,12 @@ void sample_file_open()
   rtc_ds3231_get_time(&time_s);
   assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(filename, sizeof(filename), "seismometer_%F.dat", &time_s));
 
-  error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+  error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
   FRESULT fr = f_open(&sample_data_file, filename, FA_OPEN_APPEND | FA_WRITE);
   if (FR_OK == fr)
   {
-    error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, false);
+    error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, false);
     printf("Opened sample data file '%s'.\n", filename);
 
     char buffer[64] = {'\0'};
@@ -56,13 +56,13 @@ void sample_file_open()
     
     if(f_putc('\n', &sample_data_file) < 0)
     {
-      error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+      error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
     }
-    if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+    if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
     {
       if(f_puts(buffer, &sample_data_file) < 0)
       {
-        error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+        error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
       }
     }
   }
@@ -74,7 +74,7 @@ void sample_file_open()
 }
 void sample_file_close()
 {
-  error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED, true);
+  error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
   FRESULT fr = f_close(&sample_data_file);
   if (FR_OK == fr)
@@ -93,14 +93,14 @@ static inline void log_sample(sample_log_key_e key, sample_index_t index, uint64
   snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, timestamp, data);
   puts(buffer);
 
-  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
   {
     if(f_putc('\n', &sample_data_file) < 0)
     {
       sample_file_close();
     }
   }
-  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
   {
     if(f_puts(buffer, &sample_data_file) < 0)
     {
@@ -284,8 +284,9 @@ void sample_handler(const seismometer_sample_s *sample)
       }
       if(!error_state_check(ERROR_STATE_SD_SPI_0_NOT_MOUNTED))
       {
-        if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED))
+        if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
         {
+          sample_file_close();
           sample_file_open();
         }
         else

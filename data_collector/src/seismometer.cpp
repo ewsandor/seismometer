@@ -49,7 +49,7 @@ void smps_control_power_save(smps_control_client_e client)
 critical_section_t error_state_critical_section = {0};
 static error_state_mask_t error_state_mask = (1<<ERROR_STATE_BOOT) | 
                                              (1<<ERROR_STATE_SD_SPI_0_NOT_MOUNTED) | 
-                                             (1<<ERROR_STATE_SD_SPI_0_SAMPLE_FILE_CLOSED);
+                                             (1<<ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR);
 static void error_state_init()
 {
   critical_section_init(&error_state_critical_section);
