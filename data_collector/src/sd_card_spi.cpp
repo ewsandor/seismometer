@@ -6,6 +6,7 @@
 #include <ff.h>
 #include <f_util.h>
 #include <hw_config.h>
+#include <diskio.h> 
 
 #include "sd_card_spi.hpp"
 #include "seismometer_utils.hpp"
@@ -21,8 +22,8 @@ static spi_t spi[] =
     .miso_gpio                = SPI_0_MISO_PIN,
     .mosi_gpio                = SPI_0_MOSI_PIN,
     .sck_gpio                 = SPI_0_SCK_PIN,
-    //.baud_rate                = (12500*1000),
-    .baud_rate                = (25*1000*1000),
+    .baud_rate                = (12500*1000),
+    //.baud_rate                = (25*1000*1000),
     .set_drive_strength       = false,
     .mosi_gpio_drive_strength = GPIO_DRIVE_STRENGTH_12MA,
     .sck_gpio_drive_strength  = GPIO_DRIVE_STRENGTH_12MA,
@@ -99,17 +100,21 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
   assert(sd_index < sd_get_num());
   sd_card_t *pSD = &sd_card[sd_index];
 
-  error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
+  if(!error_state_check(ERROR_STATE_SD_SPI_0_NOT_MOUNTED))
+  {
+    error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
 
-  printf("Unmounting SD SPI %u.\n", sd_index);
-  FRESULT fr = f_unmount(pSD->pcName);
-  if(FR_OK == fr)
-  {
-    ret_val = true;
-  }
-  else
-  {
-    printf("SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
+    printf("Unmounting SD SPI %u.\n", sd_index);
+    FRESULT fr = f_unmount(pSD->pcName);
+    if(FR_OK == fr)
+    {
+      ret_val = true;
+    }
+    else
+    {
+      printf("SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
+    }
+    pSD->m_Status |= STA_NOINIT;
   }
 
   return ret_val;
