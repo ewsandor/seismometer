@@ -153,8 +153,7 @@ void boot()
     printf("Reset by Watchdog!\n");
   } 
   printf("Starting boot.\n");
-  watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
-  printf("Enabled %u ms watchdog.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
+  printf("%ums Watchdog active.\n", TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US));
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
@@ -193,6 +192,7 @@ void boot()
 
 int main() 
 {
+  watchdog_enable(TIME_US_TO_MS(SEISMOMETER_WATCHDOG_PERIOD_US), 1);
   init();
   boot();
 
@@ -207,11 +207,6 @@ int main()
     /* Handle Error State */
     error_state_mask_t error_state = error_state_get();
     status_led_update(error_state==0);
-    if(error_state != 0) 
-    {
-      printf("ERROR STATE 0x%x\n", error_state);
-    }
-
     /* Pop from Sample Queue*/
     seismometer_sample_s sample;
     unsigned int queue_length = queue_get_level(&sample_queue);

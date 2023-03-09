@@ -22,9 +22,10 @@ static spi_t spi[] =
     .miso_gpio                = SPI_0_MISO_PIN,
     .mosi_gpio                = SPI_0_MOSI_PIN,
     .sck_gpio                 = SPI_0_SCK_PIN,
-    .baud_rate                = (12500*1000),
+    .baud_rate                = (5000*1000),
+    //.baud_rate                = (12500*1000),
     //.baud_rate                = (25*1000*1000),
-    .set_drive_strength       = false,
+    .set_drive_strength       = true,
     .mosi_gpio_drive_strength = GPIO_DRIVE_STRENGTH_12MA,
     .sck_gpio_drive_strength  = GPIO_DRIVE_STRENGTH_12MA,
   }
@@ -42,7 +43,7 @@ static sd_card_t sd_card[] =
     .use_card_detect        =  true,
     .card_detect_gpio       =  SD_CARD_0_CD_PIN,
     .card_detected_true     =  1,
-    .set_drive_strength     =  false,
+    .set_drive_strength     =  true,
     .ss_gpio_drive_strength =  GPIO_DRIVE_STRENGTH_12MA,
   },
 };

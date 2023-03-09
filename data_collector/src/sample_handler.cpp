@@ -29,7 +29,9 @@ typedef enum
   SAMPLE_LOG_PENDULUM_10X,
   SAMPLE_LOG_PENDULUM_100X,
   SAMPLE_LOG_PENDULUM_FILTERED,
+  SAMPLE_LOG_MAX_KEY,
 } sample_log_key_e;
+typedef unsigned int sample_log_key_mask_t;
 
 /* Length of sample data filename not including null character i.e. 'seismometer_2023-03-06.dat\0' */
 #define SAMPLE_DATA_FILENAME_LENGTH 26
@@ -92,24 +94,37 @@ void sample_file_close()
   }
 }
 
+sample_log_key_mask_t sample_index_mask_stdio = 0x00;
+sample_log_key_mask_t sample_index_mask_sd    = ((1<<SAMPLE_LOG_MAX_KEY)-1);
 static inline void log_sample(sample_log_key_e key, sample_index_t index, uint64_t timestamp, int64_t data)
 {
-  char buffer[48];
-  snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, timestamp, data);
-  puts(buffer);
+  assert(key < SAMPLE_LOG_MAX_KEY);
+  if(0 != ((1<<key) & (sample_index_mask_stdio | sample_index_mask_sd)))
+  {
+    char buffer[48];
+    snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, timestamp, data);
 
-  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
-  {
-    if(f_putc('\n', &sample_data_file) < 0)
+    if(0 != ((1<<key) & sample_index_mask_stdio))
     {
-      sample_file_close();
+      puts(buffer);
     }
-  }
-  if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
-  {
-    if(f_puts(buffer, &sample_data_file) < 0)
+
+    if(0 != ((1<<key) & sample_index_mask_sd))
     {
-      sample_file_close();
+      if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
+      {
+        if(f_putc('\n', &sample_data_file) < 0)
+        {
+          sample_file_close();
+        }
+      }
+      if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
+      {
+        if(f_puts(buffer, &sample_data_file) < 0)
+        {
+          sample_file_close();
+        }
+      }
     }
   }
 }
@@ -303,6 +318,13 @@ void sample_handler(const seismometer_sample_s *sample)
           }
         }
       }
+
+      error_state_mask_t error_state_mask = error_state_get();
+      if(error_state_mask != 0) 
+      {
+        printf("ERROR STATE 0x%x\n", error_state_mask);
+      }
+
 
       break;
     }
