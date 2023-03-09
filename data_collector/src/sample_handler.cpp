@@ -306,15 +306,18 @@ void sample_handler(const seismometer_sample_s *sample)
       {
         if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
         {
-          sample_file_close();
           sample_file_open();
+          if(error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
+          {
+            sample_file_close();
+            sd_card_spi_unmount(0);
+          }
         }
         else
         {
           if(FR_OK != f_sync(&sample_data_file))
           {
             sample_file_close();
-            sd_card_spi_unmount(0);
           }
         }
       }
