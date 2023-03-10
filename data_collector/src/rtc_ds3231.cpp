@@ -87,15 +87,15 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
   write_buffer[1] = (1<<7) /* A1M2 - match any day */;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
-  //Register 0x08 – Alarm 1 Minute
+  //Register 0x0b – Alarm 2 Minute
   write_buffer[0] = 0x0b;
   write_buffer[1] = 0x00 /* Match minute 00 */;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
-  //Register 0x09 – Alarm 1 Hour
+  //Register 0x0c – Alarm 2 Hour
   write_buffer[0] = 0x0c;
-  write_buffer[1] = 0x00 /* Match hour 00 */;
+  write_buffer[1] = (1<<7) /* Match any hour */;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
-  //Register 0x0a – Alarm 1 Day
+  //Register 0x0d – Alarm 2 Day
   write_buffer[0] = 0x0d;
   write_buffer[1] = (1<<7) /* Match any day */;
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));

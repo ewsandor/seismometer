@@ -34,7 +34,7 @@ typedef enum
 typedef unsigned int sample_log_key_mask_t;
 
 /* Length of sample data filename not including null character i.e. 'seismometer_2023-03-06.dat\0' */
-#define SAMPLE_DATA_FILENAME_LENGTH 26
+#define SAMPLE_DATA_FILENAME_LENGTH 29
 FIL sample_data_file;
 bool sample_data_file_previously_opened = false;
 void sample_file_open()
@@ -44,7 +44,7 @@ void sample_file_open()
 
   seismometer_time_s time_s;
   rtc_ds3231_get_time(&time_s);
-  assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(filename, sizeof(filename), "seismometer_%F.dat", &time_s));
+  assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(filename, sizeof(filename), "seismometer_%FT%H.dat", &time_s));
 
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
@@ -340,6 +340,7 @@ void sample_handler(const seismometer_sample_s *sample)
         sample_file_close();
         sample_file_open();
       }
+      //assert(sample->alarm_index != 1);
       break;
     }
     default:
