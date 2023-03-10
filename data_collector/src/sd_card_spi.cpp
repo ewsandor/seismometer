@@ -9,6 +9,7 @@
 #include <diskio.h> 
 
 #include "sd_card_spi.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 #define SPI_0_SCK_PIN  PICO_DEFAULT_SPI_SCK_PIN
@@ -66,7 +67,7 @@ spi_t *spi_get_by_num(size_t num) {
 }
 void sd_card_spi_init()
 {
-  printf("Initializing SD Card.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing SD Card.\n");
 
   bi_decl(bi_3pins_with_func(SPI_0_MOSI_PIN, SPI_0_MISO_PIN, SPI_0_SCK_PIN, GPIO_FUNC_SPI));
   bi_decl(bi_1pin_with_name(SD_CARD_0_CS_PIN,  "SD Card SPI Chip Select Output"));
@@ -80,7 +81,7 @@ const char *sd_card_spi_mount (const unsigned int sd_index)
 
   error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
 
-  printf("Mounting SD SPI %u.\n", sd_index);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Mounting SD SPI %u.\n", sd_index);
   FRESULT fr = f_mount(&pSD->fatfs, pSD->pcName, 1);
   if(FR_OK == fr)
   {
@@ -89,7 +90,7 @@ const char *sd_card_spi_mount (const unsigned int sd_index)
   }
   else
   {
-    printf("SD SPI error (%u) mounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "SD SPI error (%u) mounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
   }
 
   return ret_val;
@@ -103,7 +104,7 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
 
    error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
 
-  printf("Unmounting SD SPI %u.\n", sd_index);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Unmounting SD SPI %u.\n", sd_index);
   FRESULT fr = f_unmount(pSD->pcName);
   if(FR_OK == fr)
   {
@@ -111,7 +112,7 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
   }
   else
   {
-    printf("SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "SD SPI error (%u) unmounting card %u - %s.\n", fr, sd_index, FRESULT_str(fr));
   }
   pSD->m_Status |= STA_NOINIT;
 

@@ -6,6 +6,7 @@
 #include <pico/sync.h>
 
 #include "rtc_ds3231.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 #define RTC_DS3231_I2C_ADDRESS 0x68
@@ -60,7 +61,7 @@ static rtc_ds3231_s context =
 
 void rtc_ds3231_init(i2c_inst_t *i2c_inst)
 {
-  printf("Initializing ds3231 RTC.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing ds3231 RTC.\n");
   error_state_update(ERROR_STATE_RTC_NOT_SET, true);
 
   context.i2c_inst = i2c_inst;
@@ -113,7 +114,7 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
   assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
   /* Get current status register */
   assert(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
-  printf("RTC status register 0x%x\n", write_buffer[1]);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC status register 0x%x\n", write_buffer[1]);
   /* Leave current status unmodified, disable clock pin and clear alarm states */
   write_buffer[1] &= ~((1<<3) /* EN32kHz*/ | (1<<1) /* A2F*/ | (1<<0) /* A1F*/);
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
@@ -204,7 +205,7 @@ void rtc_ds3231_set(const seismometer_time_t time)
   assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
   /* Get current status register */
   assert(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
-  printf("RTC status register 0x%x\n", write_buffer[1]);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC status register 0x%x\n", write_buffer[1]);
   /* Clear Oscillator Stop Flag */
   write_buffer[1] &= ~((1<<7) /* OSF */);
   assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));

@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "mpu-6500.hpp"
+#include "seismometer_debug.hpp"
 
 #define MPU_6500_I2C_ADDRESS 0x69
 
@@ -60,7 +61,7 @@ static mpu_6500_s mpu_6500_context =
 
 void mpu_6500_init(i2c_inst_t *i2c_inst)
 {
-  printf("Initializing MPU-6500.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing MPU-6500.\n");
 
   //Write buffer index 0 is register address
   //Write buffer index 1 is write data
@@ -150,10 +151,10 @@ mpu_6500_temperature_t mpu_6500_temperature()
 //((TEMP_OUT – RoomTemp_Offset)/Temp_Sensitivity) + 21degC
 m_celsius_t mpu_6500_temperature_to_m_celsius(mpu_6500_temperature_t temp_out)
 {
-  const int64_t roomtemp_offset = 0;
+  const int64_t room_temp_offset = 0;
   const int64_t temp_sensitivity = 333870; //333.87 LSB/°C
 
-  return (((((int64_t)temp_out-roomtemp_offset)*1000*1000)/temp_sensitivity)+21000);
+  return (((((int64_t)temp_out-room_temp_offset)*1000*1000)/temp_sensitivity)+21000);
 }
 
 mm_ps2_t mpu_6500_acceleration_to_mm_ps2(mpu_6500_acceleration_t raw_acceleration)

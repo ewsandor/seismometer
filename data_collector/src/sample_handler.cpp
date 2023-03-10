@@ -12,6 +12,7 @@
 #include "rtc_ds3231.hpp"
 #include "sample_handler.hpp"
 #include "sd_card_spi.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 typedef enum
@@ -53,7 +54,7 @@ void sample_file_open()
   if (FR_OK == fr)
   {
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, false);
-    printf("Opened sample data file '%s'.\n", filename);
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Opened sample data file '%s'.\n", filename);
 
     char buffer[64] = {'\0'};
     assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "I|Opened at %FT%T.", &time_s));
@@ -72,7 +73,7 @@ void sample_file_open()
   }
   else
   {
-    printf("Error (%u) opening sample data file '%s' - %s.\n", fr, filename, FRESULT_str(fr));
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) opening sample data file '%s' - %s.\n", fr, filename, FRESULT_str(fr));
     sd_card_spi_unmount(0);
   }
 }
@@ -89,7 +90,7 @@ void sample_file_close()
     }
     else
     {
-      printf("Error (%u) closing sample data file - %s.\n", fr, FRESULT_str(fr));
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) closing sample data file - %s.\n", fr, FRESULT_str(fr));
     }
   }
 }
@@ -187,7 +188,7 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
   log_sample(SAMPLE_LOG_ACCEL_M_FILTERED, sample->index, timestamp, acceleration_filter_m.get_filtered_sample_dc_offset_removed());
 
 #ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
-  printf("i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "i: %6u hz: %7.3f mean hz: %7.3f - X: %7.3f Y: %7.3f Z: %7.3f %M: %7.3f\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
@@ -207,7 +208,7 @@ static void accelerometer_temperature_sample_handler(const seismometer_sample_s 
   static absolute_time_t last_sample_time = {0};
 
 #ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
-  printf("i: %6u hz: %7.3f mean hz: %7.3f - : %6.3fC\n", 
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "i: %6u hz: %7.3f mean hz: %7.3f - : %6.3fC\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
@@ -234,7 +235,7 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
   static absolute_time_t last_sample_time = {0};
 
 #ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
-  printf("i: %6u hz: %7.3f mean hz: %7.3f - : 10x %6.3f 100x %6.3fV\n", 
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "i: %6u hz: %7.3f mean hz: %7.3f - : 10x %6.3f 100x %6.3fV\n", 
     sample->index, 
     ((double)calculate_sample_rate(&last_sample_time, &sample->time, 1            )/1000),
     ((double)calculate_sample_rate(&epoch,            &sample->time, sample->index)/1000),
@@ -292,8 +293,7 @@ void sample_handler(const seismometer_sample_s *sample)
       assert(absolute_time_diff_us(reference_time, sample->time)==0);
       char time_string[128];
       strftime(time_string, 128, "%FT%T", &time_s);
-      printf("%u - RTC %s trigger time %llu.%06llu\n", 
-      to_ms_since_boot(get_absolute_time()),
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC %s trigger time %llu.%06llu\n", 
       time_string,
       to_us_since_boot(reference_time)/1000000, 
       to_us_since_boot(reference_time)%1000000);
@@ -325,7 +325,7 @@ void sample_handler(const seismometer_sample_s *sample)
       error_state_mask_t error_state_mask = error_state_get();
       if(error_state_mask != 0) 
       {
-        printf("ERROR STATE 0x%x\n", error_state_mask);
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "ERROR STATE 0x%x\n", error_state_mask);
       }
 
 
@@ -333,19 +333,19 @@ void sample_handler(const seismometer_sample_s *sample)
     }
     case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:
     {
-      printf("RTC Alarm %u!\n", sample->alarm_index);
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "RTC Alarm %u!\n", sample->alarm_index);
       if(2 == sample->alarm_index)
       {
-        /* Close current file and reopen with new datestamp */
+        /* Close current file and reopen with new date-stamp */
         sample_file_close();
         sample_file_open();
       }
-      //assert(sample->alarm_index != 1);
+//      assert(sample->alarm_index != 1);
       break;
     }
     default:
     {
-      printf("Unsupported sample type %u!\n", sample->type);
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unsupported sample type %u!\n", sample->type);
       assert(0);
       break;
     }

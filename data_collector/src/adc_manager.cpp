@@ -5,6 +5,7 @@
 #include <pico/binary_info.h>
 
 #include "adc_manager.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 static adc_channel_mask_t enabled_channels = 0;
@@ -12,7 +13,7 @@ static adc_sample_t current_sample[ADC_CH_MAX] = {0};
 
 void adc_manager_init(adc_channel_mask_t enabled_channels_init)
 {
-  printf("Initializing ADC manager.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing ADC manager.\n");
 
   enabled_channels = enabled_channels_init;
 

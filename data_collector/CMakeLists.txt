@@ -29,6 +29,8 @@ pico_set_program_description(seismometer "Embedded software for my homemade seis
 pico_set_program_version(seismometer "0.0.1-dev")
 pico_set_program_url(seismometer "https://git.sandorlaboratories.com/edward/seismometer/")
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSEISMOMETER_DEBUG_BUILD")
+
 # Include directory
 include_directories(seismometer inc)
 

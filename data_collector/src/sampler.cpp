@@ -10,6 +10,7 @@
 #include "rtc_ds3231.hpp"
 #include "mpu-6500.hpp"
 #include "sampler.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 static sample_thread_args_s *args_ptr = nullptr;
@@ -113,7 +114,7 @@ static void gpio_irq_callback(uint gpio, uint32_t event_mask)
     }
     default:
     {
-      printf("Unexpected interrupt for GPIO %u with event mask 0x%x", gpio, event_mask);
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unexpected interrupt for GPIO %u with event mask 0x%x", gpio, event_mask);
       break;
     }
   }
@@ -121,7 +122,7 @@ static void gpio_irq_callback(uint gpio, uint32_t event_mask)
 
 void sampler_thread_main()
 {
-  printf("Initializing sample trigger queue.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing sample trigger queue.\n");
   queue_init(&sample_trigger_queue, sizeof(sample_trigger_s), SAMPLE_TRIGGER_QUEUE_SIZE);
 
   /* Initialize the built in RTC */
@@ -143,9 +144,9 @@ void sampler_thread_main()
   sem_release(args_ptr->boot_semaphore);
   /* Do not start sampling until unblocked by logging task */
   sem_acquire_blocking(args_ptr->boot_semaphore);
-  printf("Starting sample timer.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting sample timer.\n");
   assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
-  printf("Enabling sampler GPIO interrupts.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Enabling sampler GPIO interrupts.\n");
   irq_set_enabled(IO_IRQ_BANK0, true);
  
   sample_index_t sample_index = 0;
@@ -185,7 +186,7 @@ void sampler_thread_main()
       }
       default:
       {
-        printf("Unexpected sample trigger %u\n", sample_trigger.trigger);
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unexpected sample trigger %u\n", sample_trigger.trigger);
         assert(0);
       }
     }

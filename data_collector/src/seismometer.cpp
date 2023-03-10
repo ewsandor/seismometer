@@ -16,6 +16,7 @@
 #include "sampler.hpp"
 #include "sd_card_spi.hpp"
 #include "seismometer_config.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 #define SMPS_CONTROL_PIN 23
@@ -53,7 +54,7 @@ static error_state_mask_t error_state_mask = (1<<ERROR_STATE_BOOT) |
 static void error_state_init()
 {
   critical_section_init(&error_state_critical_section);
-  printf("Initialized error state manager.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initialized error state manager.\n");
 }
 void error_state_update(const error_state_e state, const bool in_error)
 {
@@ -78,7 +79,7 @@ error_state_mask_t error_state_get()
 
 static void smps_control_init()
 {
-  printf("Initializing SMPS power-save control.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing SMPS power-save control.\n");
   bi_decl(bi_1pin_with_name(SMPS_CONTROL_PIN, "SMPS Power-Saving Control"));
   critical_section_init(&smps_control_critical_section);
   gpio_init(SMPS_CONTROL_PIN);
@@ -89,7 +90,7 @@ static void smps_control_init()
 }
 static void status_led_init()
 {
-  printf("Initializing status LED.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing status LED.\n");
   bi_decl(bi_1pin_with_name(STATUS_LED_PIN, "Status LED"));
   gpio_init(STATUS_LED_PIN);
   gpio_set_dir(STATUS_LED_PIN, GPIO_OUT);
@@ -118,7 +119,7 @@ static void status_led_update(bool enabled)
 
 void static i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
 {
-  printf("Initializing I2C with SDA pin %u and SCL pin %u with %uhz baud.\n", sda_pin, scl_pin, baud);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing I2C with SDA pin %u and SCL pin %u with %uhz baud.\n", sda_pin, scl_pin, baud);
   i2c_init(i2c, baud);
   gpio_set_function(sda_pin, GPIO_FUNC_I2C);
   gpio_set_function(scl_pin, GPIO_FUNC_I2C);
@@ -136,23 +137,27 @@ void init()
   uart_set_baudrate(uart_default, 921600);
   #endif
   #ifdef LIB_PICO_STDIO_USB
-  printf("Delaying for USB connection...\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Delaying for USB connection...\n");
   sleep_ms(TIME_S_TO_MS(5));
   #endif
-  printf( "\n\n\n\n"
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO,  "\n\n\n\n"
           "##################################################"
           "##################################################"
           "##################################################\n" );
+  #ifdef SEISMOMETER_DEBUG_BUILD
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "***DEBUG BUILD***\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
+  #endif
+
   if (watchdog_caused_reboot()) 
   {
-    printf("Reset by Watchdog!\n");
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Reset by Watchdog!\n");
   } 
-  printf("%ums watchdog enabled.\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "%ums watchdog active.\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
 }
 
 void boot()
 {
-  printf("Starting boot.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting boot.\n");
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   error_state_init();
@@ -169,10 +174,10 @@ void boot()
   watchdog_update();
   adc_manager_init(ADC_CH_TO_MASK(ADC_CH_PENDULUM_10X) | ADC_CH_TO_MASK(ADC_CH_PENDULUM_100X));
   watchdog_update();
-  printf("Initializing sample queue\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing sample queue\n");
   queue_init(&sample_queue, sizeof(seismometer_sample_s), SEISMOMETER_SAMPLE_QUEUE_SIZE);
   watchdog_update();
-  printf("Starting sampler thread.\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting sampler thread.\n");
   semaphore_t boot_semaphore = {0};
   sem_init(&boot_semaphore, 0, 1);
   sampler_thead_args.boot_semaphore = &boot_semaphore;
@@ -187,15 +192,18 @@ void boot()
   /* Unblock sampler task to start sampling */
   sem_release(&boot_semaphore);
   error_state_update(ERROR_STATE_BOOT, false);
-  printf("Boot complete!\n");
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Boot complete!\n");
 }
 
 int main() 
 {
+  #ifdef SEISMOMETER_DEBUG_BUILD
   watchdog_enable(SEISMOMETER_WATCHDOG_PERIOD_MS, true);
+  #else
+  watchdog_enable(SEISMOMETER_WATCHDOG_PERIOD_MS, false);
+  #endif
   init();
   boot();
-
   watchdog_update();
 
   set_sample_handler_epoch(get_absolute_time());
@@ -212,7 +220,7 @@ int main()
     unsigned int queue_length = queue_get_level(&sample_queue);
     if(queue_length >= (3*SEISMOMETER_SAMPLE_QUEUE_SIZE/4))
     {
-      printf("%u - Queue length %u\n", to_ms_since_boot(get_absolute_time()), queue_length);
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "%u - Queue length %u\n", to_ms_since_boot(get_absolute_time()), queue_length);
     }
     queue_remove_blocking(&sample_queue, &sample);
 
