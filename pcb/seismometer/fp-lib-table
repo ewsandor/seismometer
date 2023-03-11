@@ -1,4 +1,5 @@
 (fp_lib_table
   (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/KiCad-RP-Pico/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
   (lib (name "digikey-footprints")(type "KiCad")(uri "${KIPRJMOD}/digikey-kicad-library/digikey-footprints.pretty")(options "")(descr ""))
+  (lib (name "MPU-6500")(type "KiCad")(uri "${KIPRJMOD}/MPU-6500")(options "")(descr ""))
 )

@@ -6,3 +6,6 @@ __pycache__
 _autosave-seismometer.kicad_sch
 fp-info-cache
 data_collector/lib/zlib
+
+#Not embedded due to licensing 
+pcb/seismometer/MPU-6500 
