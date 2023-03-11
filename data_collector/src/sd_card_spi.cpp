@@ -7,7 +7,9 @@
 #include <f_util.h>
 #include <hw_config.h>
 #include <diskio.h> 
+#ifdef ENABLE_ZLIB_DATA_FILE_COMPRESSION
 #include <zlib.h>
+#endif
 
 
 #include "sd_card_spi.hpp"
@@ -25,9 +27,9 @@ static spi_t spi[] =
     .miso_gpio                = SPI_0_MISO_PIN,
     .mosi_gpio                = SPI_0_MOSI_PIN,
     .sck_gpio                 = SPI_0_SCK_PIN,
-    .baud_rate                = (5000*1000),
+    //.baud_rate                = (5000*1000),
     //.baud_rate                = (12500*1000),
-    //.baud_rate                = (25*1000*1000),
+    .baud_rate                = (25*1000*1000),
     .set_drive_strength       = true,
     .mosi_gpio_drive_strength = GPIO_DRIVE_STRENGTH_12MA,
     .sck_gpio_drive_strength  = GPIO_DRIVE_STRENGTH_12MA,
@@ -121,13 +123,14 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
   return ret_val;
 }
 
-#define SEISMOMETER_ZLIB_CHUNK_SIZE        16384
+#ifdef ENABLE_ZLIB_DATA_FILE_COMPRESSION
+#define SEISMOMETER_ZLIB_CHUNK_SIZE        8192
 #define SEISMOMETER_ZLIB_COMPRESSION_LEVEL 2
 /* deflate memory usage (bytes) = (1 << (windowBits+2)) + (1 << (memLevel+9)) + 6 KB */
 /* From zlib manual:
     The windowBits parameter is the base two logarithm of the window size (the size of the history buffer). It should be in the range 8..15 for this version of the library. Larger values of this parameter result in better compression at the expense of memory usage. The default value is 15 if deflateInit is used instead.
     For the current implementation of deflate(), a windowBits value of 8 (a window size of 256 bytes) is not supported. As a result, a request for 8 will result in 9 (a 512-byte window). In that case, providing 8 to inflateInit2() will result in an error when the zlib header with 9 is checked against the initialization of inflate(). The remedy is to not use 8 with deflateInit2() with this initialization, or at least in that case use 9 with inflateInit2(). */
-#define SEISMOMETER_ZLIB_WINDOW_BITS       13
+#define SEISMOMETER_ZLIB_WINDOW_BITS       12
 #define SEISMOMETER_ZLIB_MEM_LEVEL         (SEISMOMETER_ZLIB_WINDOW_BITS-7)
 bool compress_file_zlib(FIL *source_file, FIL *compressed_file)
 {
@@ -259,3 +262,4 @@ bool sd_card_spi_compress_file(const char* source_filename)
 
   return ret_val;
 }
+#endif /* ENABLE_ZLIB_DATA_FILE_COMPRESSION */

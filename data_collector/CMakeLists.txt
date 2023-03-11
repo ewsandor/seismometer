@@ -9,6 +9,8 @@ project(seismometer)
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+option(ENABLE_ZLIB_DATA_FILE_COMPRESSION "Option to enable ZLIB datafile compression." OFF)
+
 # Main executible
 add_executable( 
                 seismometer
@@ -42,11 +44,14 @@ target_link_libraries(seismometer pico_multicore pico_stdlib hardware_adc hardwa
 add_compile_definitions(FatFs_SPI PRIVATE NO_PICO_LED)
 add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI EXCLUDE_FROM_ALL)
 target_link_libraries(seismometer FatFs_SPI)
+if(ENABLE_ZLIB_DATA_FILE_COMPRESSION)
+add_compile_definitions(seismometer PRIVATE ENABLE_ZLIB_DATA_FILE_COMPRESSION)
 #zlib
 add_subdirectory(lib/zlib EXCLUDE_FROM_ALL)
 target_include_directories(seismometer PRIVATE lib/zlib)
 target_include_directories(seismometer PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/lib/zlib)
 target_link_libraries(seismometer zlibstatic)
+endif()
 
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(seismometer)
