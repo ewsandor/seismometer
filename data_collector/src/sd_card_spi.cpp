@@ -118,3 +118,55 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
 
   return ret_val;
 }
+
+#define COMPRESSED_FILE_FILENAME_MAX_LENGTH 256
+#define COMPRESSED_FILE_FILENAME_EXTENSION_LENGTH 3
+#define COMPRESSED_FILE_FILENAME_FORMAT     "%s.gz"
+bool sd_card_spi_compress_file(const char* source_filename)
+{
+  bool ret_val = true;
+  assert(source_filename != nullptr);
+
+  char compressed_file_filename[COMPRESSED_FILE_FILENAME_MAX_LENGTH] = {'\0'};
+  assert(snprintf(compressed_file_filename, COMPRESSED_FILE_FILENAME_MAX_LENGTH, COMPRESSED_FILE_FILENAME_FORMAT, source_filename) > COMPRESSED_FILE_FILENAME_EXTENSION_LENGTH);
+
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Compressing file '%s' to '%s'.\n", source_filename, compressed_file_filename);
+
+  FRESULT fr = FR_INVALID_PARAMETER;
+  FIL source_file;
+  fr = f_open(&source_file, source_filename, FA_READ);
+  if(FR_OK == fr)
+  {
+    FIL compressed_file;
+    fr = f_open(&compressed_file, source_filename, (FA_CREATE_ALWAYS | FA_WRITE));
+
+    if(FR_OK == fr)
+    {
+      if(FR_OK != f_close(&compressed_file))
+      {
+        /* Do compression here */
+
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) closing compressed file '%s' - %s.\n", fr, compressed_file_filename, FRESULT_str(fr));
+        ret_val = false;
+      }
+    }
+    else
+    {
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) opening compressed file '%s' - %s.\n", fr, compressed_file_filename, FRESULT_str(fr));
+      ret_val = false;
+    }
+
+    if(FR_OK != f_close(&source_file))
+    {
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) closing source file '%s' - %s.\n", fr, source_filename, FRESULT_str(fr));
+      ret_val = false;
+    }
+  }
+  else
+  {
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) opening source file '%s' - %s.\n", fr, source_filename, FRESULT_str(fr));
+    ret_val = false;
+  }
+
+  return ret_val;
+}

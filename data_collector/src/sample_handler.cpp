@@ -38,23 +38,22 @@ typedef unsigned int sample_log_key_mask_t;
 #define SAMPLE_DATA_FILENAME_LENGTH 29
 FIL sample_data_file;
 bool sample_data_file_previously_opened = false;
+char sample_file_filename[SAMPLE_DATA_FILENAME_LENGTH+1]  = {'\0'};
 void sample_file_open()
 {
   /*SAMPLE_DATA_FILENAME_LENGTH+1 for NULL character*/
-  char filename[SAMPLE_DATA_FILENAME_LENGTH+1]  = {'\0'};
-
   seismometer_time_s time_s;
   rtc_ds3231_get_time(&time_s);
-  assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(filename, sizeof(filename), "seismometer_%FT%H.dat", &time_s));
+  assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(sample_file_filename, sizeof(sample_file_filename), "seismometer_%FT%H.dat", &time_s));
 
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
-  FRESULT fr = f_open(&sample_data_file, filename, FA_OPEN_APPEND | FA_WRITE);
+  FRESULT fr = f_open(&sample_data_file, sample_file_filename, FA_OPEN_APPEND | FA_WRITE);
   sample_data_file_previously_opened = true;
   if (FR_OK == fr)
   {
     error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, false);
-    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Opened sample data file '%s'.\n", filename);
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Opened sample data file '%s'.\n", sample_file_filename);
 
     char buffer[64] = {'\0'};
     assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "I|Opened at %FT%T.", &time_s));
@@ -73,7 +72,7 @@ void sample_file_open()
   }
   else
   {
-    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) opening sample data file '%s' - %s.\n", fr, filename, FRESULT_str(fr));
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%u) opening sample data file '%s' - %s.\n", fr, sample_file_filename, FRESULT_str(fr));
     sd_card_spi_unmount(0);
   }
 }
@@ -338,6 +337,7 @@ void sample_handler(const seismometer_sample_s *sample)
       {
         /* Close current file and reopen with new date-stamp */
         sample_file_close();
+        sd_card_spi_compress_file(sample_file_filename);
         sample_file_open();
       }
 //      assert(sample->alarm_index != 1);
