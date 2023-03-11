@@ -333,7 +333,7 @@ void sample_handler(const seismometer_sample_s *sample)
     case SEISMOMETER_SAMPLE_TYPE_RTC_ALARM:
     {
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "RTC Alarm %u!\n", sample->alarm_index);
-      if(2 == sample->alarm_index)
+      if(1 == sample->alarm_index)
       {
         /* Close current file and reopen with new date-stamp */
         sample_file_close();
