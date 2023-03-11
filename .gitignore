@@ -5,3 +5,4 @@ __pycache__
 *.zip
 _autosave-seismometer.kicad_sch
 fp-info-cache
+data_collector/lib/zlib

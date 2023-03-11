@@ -7,6 +7,6 @@ const char *sd_card_spi_mount (const unsigned int sd_index);
 /* Unmount SD card, returns true if successful */
 bool        sd_card_spi_unmount(const unsigned int sd_index);
 
-bool sd_card_spi_compress_file(const char* filename);
+bool        sd_card_spi_compress_file(const char* filename);
 
 #endif /* __SD_CARD_SPI_HPP__ */

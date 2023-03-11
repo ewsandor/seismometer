@@ -32,14 +32,21 @@ pico_set_program_url(seismometer "https://git.sandorlaboratories.com/edward/seis
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSEISMOMETER_DEBUG_BUILD")
 
 # Include directory
-include_directories(seismometer inc)
+target_include_directories(seismometer PRIVATE inc)
 
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(seismometer pico_multicore pico_stdlib hardware_adc hardware_i2c)
+target_link_libraries(seismometer pico_multicore pico_stdlib hardware_adc hardware_rtc hardware_i2c)
 
+#Add libraries
+#FatFs SD SPI 
 add_compile_definitions(FatFs_SPI PRIVATE NO_PICO_LED)
-add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
+add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI EXCLUDE_FROM_ALL)
 target_link_libraries(seismometer FatFs_SPI)
+#zlib
+add_subdirectory(lib/zlib EXCLUDE_FROM_ALL)
+target_include_directories(seismometer PRIVATE lib/zlib)
+target_include_directories(seismometer PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/lib/zlib)
+target_link_libraries(seismometer zlibstatic)
 
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(seismometer)

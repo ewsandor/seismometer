@@ -7,6 +7,8 @@
 #include <f_util.h>
 #include <hw_config.h>
 #include <diskio.h> 
+#include <zlib.h>
+
 
 #include "sd_card_spi.hpp"
 #include "seismometer_debug.hpp"

@@ -21,7 +21,7 @@ typedef enum
 #define SEISMOMETER_LOG_LEVEL SEISMOMETER_LOG_INFO
 #endif
 
-#define SEISMOMETER_PRINTF(level,format,args...) \ 
+#define SEISMOMETER_PRINTF(level,format,args...) \
   if(level <= SEISMOMETER_LOG_INFO) \
   {                                 \
     printf(format, ##args);         \
