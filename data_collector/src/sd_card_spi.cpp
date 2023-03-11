@@ -76,6 +76,10 @@ void sd_card_spi_init()
   bi_decl(bi_3pins_with_func(SPI_0_MOSI_PIN, SPI_0_MISO_PIN, SPI_0_SCK_PIN, GPIO_FUNC_SPI));
   bi_decl(bi_1pin_with_name(SD_CARD_0_CS_PIN,  "SD Card SPI Chip Select Output"));
   bi_decl(bi_1pin_with_name(SD_CARD_0_CD_PIN,  "SD Card Chip Detect Input"));
+
+  gpio_init(SD_CARD_0_CS_PIN);
+  gpio_set_dir(SD_CARD_0_CS_PIN, GPIO_OUT);
+  gpio_put(SD_CARD_0_CS_PIN, 1);
 }
 const char *sd_card_spi_mount (const unsigned int sd_index)
 {

@@ -141,9 +141,8 @@ void init()
   sleep_ms(TIME_S_TO_MS(5));
   #endif
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO,  "\n\n\n\n"
-          "##################################################"
-          "##################################################"
-          "##################################################\n" );
+          "################################################################################"
+          "################################################################################\n" );
   #ifdef SEISMOMETER_DEBUG_BUILD
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "***DEBUG BUILD***\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
   #endif
@@ -163,6 +162,8 @@ void boot()
   error_state_init();
   watchdog_update();
   smps_control_init();
+  watchdog_update();
+  sd_card_spi_init();
   watchdog_update();
   status_led_init();
   watchdog_update();
@@ -186,8 +187,6 @@ void boot()
   multicore_launch_core1(sampler_thread_main);
   /* Block until inital sampler task setup is complete */
   sem_acquire_blocking(&boot_semaphore);
-  watchdog_update();
-  sd_card_spi_init();
   watchdog_update();
   /* Unblock sampler task to start sampling */
   sem_release(&boot_semaphore);
