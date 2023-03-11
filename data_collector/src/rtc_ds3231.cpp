@@ -74,32 +74,32 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
   //Register 0x07 – Alarm 1 Second
   write_buffer[0] = 0x07;
   write_buffer[1] = 0x0 /* match when seconds is 00 */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x08 – Alarm 1 Minute
   write_buffer[0] = 0x08;
   write_buffer[1] = (1<<7) /* A1M2 - match any minute */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x09 – Alarm 1 Hour
   write_buffer[0] = 0x09;
   write_buffer[1] = (1<<7) /* A1M2 - match any hour */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x0a – Alarm 1 Day
   write_buffer[0] = 0x0a;
   write_buffer[1] = (1<<7) /* A1M2 - match any day */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
   //Register 0x0b – Alarm 2 Minute
   write_buffer[0] = 0x0b;
   write_buffer[1] = 0x00 /* Match minute 00 */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x0c – Alarm 2 Hour
   write_buffer[0] = 0x0c;
   write_buffer[1] = (1<<7) /* Match any hour */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x0d – Alarm 2 Day
   write_buffer[0] = 0x0d;
   write_buffer[1] = (1<<7) /* Match any day */;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
 
   //Register 0x0E – Control Register
@@ -108,16 +108,16 @@ void rtc_ds3231_init(i2c_inst_t *i2c_inst)
 //  write_buffer[1] = (1<<2) /*INTCN*/ | (1<<0) /*A1IE*/;
   /* Configure 1Hz square wave and register for Alarm 1*/
   write_buffer[1] = (1<<1) /*A2IE*/ | (1<<0) /*A1IE*/;
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
   //Register 0x0F - Status/Control Register
   write_buffer[0] = 0x0F;
-  assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
   /* Get current status register */
-  assert(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC status register 0x%x\n", write_buffer[1]);
   /* Leave current status unmodified, disable clock pin and clear alarm states */
   write_buffer[1] &= ~((1<<3) /* EN32kHz*/ | (1<<1) /* A2F*/ | (1<<0) /* A1F*/);
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
 }
 
@@ -126,15 +126,15 @@ void rtc_ds3231_read(absolute_time_t reference)
   /* Reset register address to 0x00 */
   uint8_t write_buffer[2];
   write_buffer[0]=0x00;
-  assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, true));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, true));
   /* Read all 19 registers */
   uint8_t read_buffer[19];
   /* Get current status register */
-  assert(19 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, read_buffer, 19, false));
+  SEISMOMETER_ASSERT_CALL(19 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, read_buffer, 19, false));
   /* Reset alarm interrupt flags */
   write_buffer[0] = 0x0F;
   write_buffer[1] = read_buffer[0xF] & ~((1<<1) /* A2F*/ | (1<<0) /* A1F*/);
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
   /* Parse new data */
   rtc_ds3231_data_s new_data = {0};
@@ -174,7 +174,7 @@ void rtc_ds3231_read(absolute_time_t reference)
     .min   = (new_data.minutes),            ///< 0..59
     .sec   = (new_data.seconds),            ///< 0..59
   };
-  assert(rtc_set_datetime(&pico_rtc_time));
+  SEISMOMETER_ASSERT_CALL(rtc_set_datetime(&pico_rtc_time));
 
   /* Commit new data */
   critical_section_enter_blocking(&context.critical_section);
@@ -202,13 +202,13 @@ void rtc_ds3231_set(const seismometer_time_t time)
 
   /* Reset oscillator stopped status to indicate data is good */
   write_buffer[0] = 0x0F;
-  assert(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
   /* Get current status register */
-  assert(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC status register 0x%x\n", write_buffer[1]);
   /* Clear Oscillator Stop Flag */
   write_buffer[1] &= ~((1<<7) /* OSF */);
-  assert(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 2, false));
 
   write_buffer[0]=0x00; /* Reset register address to 0x00 */
   write_buffer[1+0x0]=((time_s.tm_sec%10)  & 0xF) | (((time_s.tm_sec/10) & 0x7)<<4);
@@ -221,13 +221,13 @@ void rtc_ds3231_set(const seismometer_time_t time)
   write_buffer[1+0x5]=(((time_s.tm_mon+1)%10)  & 0xF) | ((((time_s.tm_mon+1)/10)  & 0x1)<<4);
   if(time_s.tm_year>=100){ write_buffer[1+0x5] |= (1<<7); }
   write_buffer[1+0x6]=((time_s.tm_year%10) & 0xF) | ((((time_s.tm_year/10)%10) & 0xF)<<4);
-  assert(8 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 8, false));
+  SEISMOMETER_ASSERT_CALL(8 == i2c_write_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 8, false));
 
 }
 
 absolute_time_t rtc_ds3231_get_time(seismometer_time_s *time)
 {
-  assert(time != nullptr);
+  SEISMOMETER_ASSERT(time != nullptr);
 
   critical_section_enter_blocking(&context.critical_section);
   rtc_ds3231_data_s data_copy = context.data;

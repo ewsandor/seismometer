@@ -13,8 +13,8 @@
 #include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
-static sample_thread_args_s *args_ptr = nullptr;
-static repeating_timer_t     sample_timer         = {0};
+static sample_thread_args_s *args_ptr     = nullptr;
+static repeating_timer_t     sample_timer = {0};
 #define SAMPLE_TRIGGER_QUEUE_SIZE 2
 typedef enum
 {
@@ -36,7 +36,7 @@ static queue_t sample_trigger_queue = {0};
 
 void sampler_thread_pass_args(sample_thread_args_s *args)
 {
-  assert(nullptr == args_ptr);
+  SEISMOMETER_ASSERT(nullptr == args_ptr);
   args_ptr = args;
 }
 
@@ -44,7 +44,7 @@ static bool sample_timer_callback(repeating_timer_t *rt)
 {
   smps_control_force_pwm(SMPS_CONTROL_CLIENT_SAMPLER);
   sample_trigger_s sample_trigger = {.trigger=SAMPLE_TRIGGER_SAMPLE_PERIOD};
-  assert(queue_try_add((queue_t*) rt->user_data, &sample_trigger));
+  SEISMOMETER_ASSERT_CALL(queue_try_add((queue_t*) rt->user_data, &sample_trigger));
   return true; /*true to continue repeating, false to stop.*/
 }
 
@@ -57,7 +57,7 @@ static void sample_mpu_6500(sample_index_t index, const absolute_time_t *time)
   temperature_sample.index = index;
   temperature_sample.time  = *time;
   temperature_sample.temperature = mpu_6500_temperature_to_m_celsius(mpu_6500_temperature());
-  assert(queue_try_add(args_ptr->sample_queue, &temperature_sample));
+  SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &temperature_sample));
 
   /* Sample acceleration */
   mpu_6500_accelerometer_data_s accelerometer_data;
@@ -70,7 +70,7 @@ static void sample_mpu_6500(sample_index_t index, const absolute_time_t *time)
   acceleration_sample.acceleration.x = mpu_6500_acceleration_to_mm_ps2(accelerometer_data.x);
   acceleration_sample.acceleration.y = mpu_6500_acceleration_to_mm_ps2(accelerometer_data.y);
   acceleration_sample.acceleration.z = mpu_6500_acceleration_to_mm_ps2(accelerometer_data.z);
-  assert(queue_try_add(args_ptr->sample_queue, &acceleration_sample));
+  SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &acceleration_sample));
 }
 
 static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
@@ -84,7 +84,7 @@ static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
 
   sample.pendulum.x10  = adc_manager_get_sample_mv(ADC_CH_PENDULUM_10X);
   sample.pendulum.x100 = adc_manager_get_sample_mv(ADC_CH_PENDULUM_100X);
-  assert(queue_try_add(args_ptr->sample_queue, &sample));
+  SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &sample));
 }
 
 static void rtc_alarm_cb(void* user_data_ptr)
@@ -93,7 +93,7 @@ static void rtc_alarm_cb(void* user_data_ptr)
   memset(&sample, 0, sizeof(seismometer_sample_s));
   sample.type        = SEISMOMETER_SAMPLE_TYPE_RTC_ALARM;
   sample.alarm_index = ((unsigned int) user_data_ptr);
-  assert(queue_try_add(args_ptr->sample_queue, &sample));
+  SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &sample));
 }
 
 #define RTC_INTERRUPT_PIN 22
@@ -103,13 +103,13 @@ static void gpio_irq_callback(uint gpio, uint32_t event_mask)
   {
     case RTC_INTERRUPT_PIN:
     {
-      assert(event_mask == GPIO_IRQ_EDGE_RISE);
+      SEISMOMETER_ASSERT(event_mask == GPIO_IRQ_EDGE_RISE);
       sample_trigger_s sample_trigger = 
       {
         .trigger  =SAMPLE_TRIGGER_RTC_TICK,
         .timestamp=get_absolute_time(),
       };
-      assert(queue_try_add(&sample_trigger_queue, &sample_trigger));
+      SEISMOMETER_ASSERT_CALL(queue_try_add(&sample_trigger_queue, &sample_trigger));
       break;
     }
     default:
@@ -145,7 +145,7 @@ void sampler_thread_main()
   /* Do not start sampling until unblocked by logging task */
   sem_acquire_blocking(args_ptr->boot_semaphore);
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting sample timer.\n");
-  assert(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
+  SEISMOMETER_ASSERT_CALL(add_repeating_timer_us(-SEISMOMETER_SAMPLE_PERIOD_US, sample_timer_callback, &sample_trigger_queue, &sample_timer));
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Enabling sampler GPIO interrupts.\n");
   irq_set_enabled(IO_IRQ_BANK0, true);
  
@@ -181,13 +181,13 @@ void sampler_thread_main()
         memset(&sample, 0, sizeof(seismometer_sample_s));
         sample.type = SEISMOMETER_SAMPLE_TYPE_RTC_TICK;
         sample.time = sample_trigger.timestamp;
-        assert(queue_try_add(args_ptr->sample_queue, &sample));
+        SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &sample));
         break;
       }
       default:
       {
         SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unexpected sample trigger %u\n", sample_trigger.trigger);
-        assert(0);
+        SEISMOMETER_ASSERT(0);
       }
     }
   }

@@ -73,36 +73,36 @@ void mpu_6500_init(i2c_inst_t *i2c_inst)
   //Reset device to default settings
   write_buffer[0] = 107;
   write_buffer[1] = (1<<7) /*DEVICE_RESET*/;
-  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   sleep_ms(10);
   //Register 108 – Power Management 2
   write_buffer[0] = 108;
   write_buffer[1] = (0x7) /*DISABLE_X/Y/ZG*/;
-  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 25 – Sample Rate Divider
   write_buffer[0] = 25;
   write_buffer[1] = 3; //SAMPLE_RATE = INTERNAL_SAMPLE_RATE / (1 + SMPLRT_DIV) where INTERNAL_SAMPLE_RATE = 1kHz
-  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 28 – Accelerometer Configuration
   write_buffer[0] = 28;
   write_buffer[1] = (ACCELEROMETER_02G<<3);
-  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 29 – Accelerometer Configuration 2
   write_buffer[0] = 29;
   write_buffer[1] = (A_DLPF_CFG_092<<0);
-  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 35 – FIFO Enable
   write_buffer[0] = 35;
   write_buffer[1] = (1<<7) /*TEMP_OUT*/ | (1<<3) /*ACCEL*/;
-// assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+// SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 55 – INT Pin / Bypass Enable Configuration
   write_buffer[0] = 55;
   write_buffer[1] = (1<<4) /*INT_ANYRD_2CLEAR*/;
-//  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+//  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
   //Register 56 – Interrupt Enable
   write_buffer[0] = 56;
   write_buffer[1] = (1<<0) /*RAW_RDY_EN*/;
-//  assert(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
+//  SEISMOMETER_ASSERT_CALL(2 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, write_buffer, 2, false));
 }
 
 void mpu_6500_calibrate()
@@ -120,8 +120,8 @@ void mpu_6500_read()
   uint8_t register_address;
 
   register_address = ACCEL_XOUT_H;
-  assert(1 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
-  assert(8 == i2c_read_blocking (mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, read_buffer,       8, false));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_write_blocking(mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, &register_address, 1, true));
+  SEISMOMETER_ASSERT_CALL(8 == i2c_read_blocking (mpu_6500_context.i2c_inst, MPU_6500_I2C_ADDRESS, read_buffer,       8, false));
   mpu_6500_context.last_accelerometer_data.x = (read_buffer[0] << 8) | read_buffer[1];
   mpu_6500_context.last_accelerometer_data.y = (read_buffer[2] << 8) | read_buffer[3];
   mpu_6500_context.last_accelerometer_data.z = (read_buffer[4] << 8) | read_buffer[5];
@@ -130,13 +130,13 @@ void mpu_6500_read()
 
 void mpu_6500_accelerometer_data_raw(mpu_6500_accelerometer_data_s *accelerometer_data)
 {
-  assert(accelerometer_data != nullptr);
+  SEISMOMETER_ASSERT(accelerometer_data != nullptr);
   *accelerometer_data = mpu_6500_context.last_accelerometer_data;
 }
 
 void mpu_6500_accelerometer_data(mpu_6500_accelerometer_data_s *accelerometer_data)
 {
-  assert(accelerometer_data != nullptr);
+  SEISMOMETER_ASSERT(accelerometer_data != nullptr);
   mpu_6500_accelerometer_data_raw(accelerometer_data);
   accelerometer_data->x += mpu_6500_context.accelerometer_offsets.x;
   accelerometer_data->y += mpu_6500_context.accelerometer_offsets.y;

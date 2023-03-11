@@ -27,5 +27,12 @@ typedef enum
     printf(format, ##args);         \
   }
 
+#define SEISMOMETER_ASSERT(exp) assert(exp)
+
+#ifdef SEISMOMETER_DEBUG_BUILD
+#define SEISMOMETER_ASSERT_CALL(exp) assert(exp)
+#else
+#define SEISMOMETER_ASSERT_CALL(exp) (exp)
+#endif
 
 #endif /*__SEISMOMETER_DEBUG_HPP__ */

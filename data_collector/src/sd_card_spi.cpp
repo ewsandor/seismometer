@@ -80,7 +80,7 @@ void sd_card_spi_init()
 const char *sd_card_spi_mount (const unsigned int sd_index)
 {
   const char * ret_val = nullptr;
-  assert(sd_index < sd_get_num());
+  SEISMOMETER_ASSERT(sd_index < sd_get_num());
   sd_card_t *pSD = &sd_card[sd_index];
 
   error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
@@ -103,7 +103,7 @@ bool sd_card_spi_unmount(const unsigned int sd_index)
 {
   bool ret_val = false;
 
-  assert(sd_index < sd_get_num());
+  SEISMOMETER_ASSERT(sd_index < sd_get_num());
   sd_card_t *pSD = &sd_card[sd_index];
 
    error_state_update(ERROR_STATE_SD_SPI_0_NOT_MOUNTED, true);
@@ -136,8 +136,8 @@ bool compress_file_zlib(FIL *source_file, FIL *compressed_file)
 {
   bool ret_val = true;
 
-  assert(nullptr != source_file);
-  assert(nullptr != compressed_file);
+  SEISMOMETER_ASSERT(nullptr != source_file);
+  SEISMOMETER_ASSERT(nullptr != compressed_file);
 
   /* allocate deflate state */
   Bytef in[SEISMOMETER_ZLIB_CHUNK_SIZE];
@@ -150,7 +150,7 @@ bool compress_file_zlib(FIL *source_file, FIL *compressed_file)
   if(Z_OK != ret)
   {
     SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Error (%d) initializing deflate stream.\n", ret);
-    assert(0);
+    SEISMOMETER_ASSERT(0);
   }
 
   unsigned int input_bytes = 0, output_bytes = 0;
@@ -175,7 +175,7 @@ bool compress_file_zlib(FIL *source_file, FIL *compressed_file)
         strm.next_out  = out;
 
         ret = deflate(&strm, flush);    /* no bad return value */
-        assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+        SEISMOMETER_ASSERT(ret != Z_STREAM_ERROR);  /* state not clobbered */
 
         unsigned have = SEISMOMETER_ZLIB_CHUNK_SIZE - strm.avail_out;
         output_bytes += have;
@@ -193,14 +193,14 @@ bool compress_file_zlib(FIL *source_file, FIL *compressed_file)
       } while(strm.avail_out == 0);
       if(true == ret_val)
       {
-        assert(strm.avail_in == 0);
+        SEISMOMETER_ASSERT(strm.avail_in == 0);
       }
     }
 
   } while(ret_val && (0 == f_eof(source_file)));
   if(true == ret_val)
   {
-    assert(ret == Z_STREAM_END);
+    SEISMOMETER_ASSERT(ret == Z_STREAM_END);
   }
 
   deflateEnd(&strm);
@@ -216,10 +216,10 @@ bool compress_file_zlib(FIL *source_file, FIL *compressed_file)
 bool sd_card_spi_compress_file(const char* source_filename)
 {
   bool ret_val = true;
-  assert(source_filename != nullptr);
+  SEISMOMETER_ASSERT(source_filename != nullptr);
 
   char compressed_file_filename[COMPRESSED_FILE_FILENAME_MAX_LENGTH] = {'\0'};
-  assert(snprintf(compressed_file_filename, COMPRESSED_FILE_FILENAME_MAX_LENGTH, COMPRESSED_FILE_FILENAME_FORMAT, source_filename) > COMPRESSED_FILE_FILENAME_EXTENSION_LENGTH);
+  SEISMOMETER_ASSERT_CALL(snprintf(compressed_file_filename, COMPRESSED_FILE_FILENAME_MAX_LENGTH, COMPRESSED_FILE_FILENAME_FORMAT, source_filename) > COMPRESSED_FILE_FILENAME_EXTENSION_LENGTH);
 
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Compressing file '%s' to '%s'.\n", source_filename, compressed_file_filename);
 
@@ -233,7 +233,7 @@ bool sd_card_spi_compress_file(const char* source_filename)
 
     if(FR_OK == fr)
     {
-      assert(true == ret_val);
+      SEISMOMETER_ASSERT(true == ret_val);
       ret_val = compress_file_zlib(&source_file, &compressed_file);
 
       if(FR_OK != f_close(&compressed_file))

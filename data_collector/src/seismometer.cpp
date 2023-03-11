@@ -26,7 +26,7 @@ critical_section_t smps_control_critical_section = {0};
 static unsigned int smps_control_vote_mask = 0;
 void smps_control_force_pwm(smps_control_client_e client)
 {
-  assert(client < SMPS_CONTROL_CLIENT_MAX);
+  SEISMOMETER_ASSERT(client < SMPS_CONTROL_CLIENT_MAX);
   critical_section_enter_blocking(&smps_control_critical_section);
   if(0 == smps_control_vote_mask)
   {
@@ -37,7 +37,7 @@ void smps_control_force_pwm(smps_control_client_e client)
 }
 void smps_control_power_save(smps_control_client_e client)
 {
-  assert(client < SMPS_CONTROL_CLIENT_MAX);
+  SEISMOMETER_ASSERT(client < SMPS_CONTROL_CLIENT_MAX);
   critical_section_enter_blocking(&smps_control_critical_section);
   smps_control_vote_mask &= ~(1<<client);
   if(0 == smps_control_vote_mask)

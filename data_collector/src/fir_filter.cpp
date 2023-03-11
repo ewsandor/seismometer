@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include "fir_filter.hpp"
+#include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
 #define INCREMENT_CIRCULAR_BUFFER_ITERATOR(iterator, buffer_size) \
@@ -22,13 +23,13 @@ fir_filter_c::fir_filter_c( filter_order_t order_init, const filter_coefficient_
   : order(order_init), coefficient(coefficient_init), config(*config_init), 
     circular_buffer_size(SEISMOMETER_MAX(order_init, config_init->moving_average_order))
 {
-  assert(config_init != nullptr);
-  assert(coefficient != nullptr);
-  assert(order > 0);
-  assert(config.gain_denominator != 0);
-  assert(circular_buffer_size > 0);
+  SEISMOMETER_ASSERT(config_init != nullptr);
+  SEISMOMETER_ASSERT(coefficient != nullptr);
+  SEISMOMETER_ASSERT(order > 0);
+  SEISMOMETER_ASSERT(config.gain_denominator != 0);
+  SEISMOMETER_ASSERT(circular_buffer_size > 0);
   circular_buffer = (filter_sample_t*) calloc(sizeof(filter_sample_t), circular_buffer_size);
-  assert(circular_buffer != nullptr);
+  SEISMOMETER_ASSERT(circular_buffer != nullptr);
 }
 fir_filter_c::~fir_filter_c()
 {

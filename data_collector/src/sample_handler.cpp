@@ -44,7 +44,7 @@ void sample_file_open()
   /*SAMPLE_DATA_FILENAME_LENGTH+1 for NULL character*/
   seismometer_time_s time_s;
   rtc_ds3231_get_time(&time_s);
-  assert(SAMPLE_DATA_FILENAME_LENGTH == strftime(sample_file_filename, sizeof(sample_file_filename), "seismometer_%FT%H.dat", &time_s));
+  SEISMOMETER_ASSERT_CALL(SAMPLE_DATA_FILENAME_LENGTH == strftime(sample_file_filename, sizeof(sample_file_filename), "seismometer_%FT%H.dat", &time_s));
 
   error_state_update(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR, true);
 
@@ -56,7 +56,7 @@ void sample_file_open()
     SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Opened sample data file '%s'.\n", sample_file_filename);
 
     char buffer[64] = {'\0'};
-    assert( sizeof(buffer) > strftime(buffer, sizeof(buffer), "I|Opened at %FT%T.", &time_s));
+    SEISMOMETER_ASSERT_CALL( sizeof(buffer) > strftime(buffer, sizeof(buffer), "I|Opened at %FT%T.", &time_s));
     
     if(f_putc('\n', &sample_data_file) < 0)
     {
@@ -98,7 +98,7 @@ sample_log_key_mask_t sample_index_mask_stdio = 0x00;
 sample_log_key_mask_t sample_index_mask_sd    = ((1<<SAMPLE_LOG_MAX_KEY)-1);
 static inline void log_sample(sample_log_key_e key, sample_index_t index, uint64_t timestamp, int64_t data)
 {
-  assert(key < SAMPLE_LOG_MAX_KEY);
+  SEISMOMETER_ASSERT(key < SAMPLE_LOG_MAX_KEY);
   if(0 != ((1<<key) & (sample_index_mask_stdio | sample_index_mask_sd)))
   {
     char buffer[48];
@@ -137,14 +137,14 @@ void set_sample_handler_epoch(absolute_time_t time)
 
  static inline m_hz_t calculate_sample_rate(const absolute_time_t *first_sample_time, const absolute_time_t *last_sample_time, sample_index_t sample_count)
 {
-  assert(first_sample_time != nullptr);
-  assert(last_sample_time  != nullptr);
+  SEISMOMETER_ASSERT(first_sample_time != nullptr);
+  SEISMOMETER_ASSERT(last_sample_time  != nullptr);
 
   const uint32_t first_ms = to_ms_since_boot(*first_sample_time);
   const uint32_t last_ms  = to_ms_since_boot(*last_sample_time);
   const uint32_t delta = (last_ms-first_ms);
 
-  assert(delta > 0);
+  SEISMOMETER_ASSERT(delta > 0);
 
   return (((uint64_t)sample_count*1000*1000)/delta);
 }
@@ -163,8 +163,8 @@ static fir_filter_c acceleration_filter_m(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_O
 
 static void acceleration_sample_handler(const seismometer_sample_s *sample)
 {
-  assert(sample != nullptr);
-  assert(SEISMOMETER_SAMPLE_TYPE_ACCELERATION == sample->type);
+  SEISMOMETER_ASSERT(sample != nullptr);
+  SEISMOMETER_ASSERT(SEISMOMETER_SAMPLE_TYPE_ACCELERATION == sample->type);
 
   static absolute_time_t last_sample_time = {0};
   mm_ps2_t acceleration_magnitude = sqrt( (sample->acceleration.x*sample->acceleration.x) + 
@@ -202,8 +202,8 @@ static void acceleration_sample_handler(const seismometer_sample_s *sample)
 
 static void accelerometer_temperature_sample_handler(const seismometer_sample_s *sample)
 {
-  assert(sample != nullptr);
-  assert(SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE == sample->type);
+  SEISMOMETER_ASSERT(sample != nullptr);
+  SEISMOMETER_ASSERT(SEISMOMETER_SAMPLE_TYPE_ACCELEROMETER_TEMPERATURE == sample->type);
   static absolute_time_t last_sample_time = {0};
 
 #ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
@@ -229,8 +229,8 @@ static fir_filter_c pendulum_10x_filter (FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_OR
 static fir_filter_c pendulum_100x_filter(FIR_HAMMING_LPF_100HZ_FS_10HZ_CUTOFF_ORDER, fir_hamming_lpf_100hz_fs_10hz_cutoff, &pendulum_fir_filter_config);
 static void pendulum_sample_handler(const seismometer_sample_s *sample)
 {
-  assert(sample != nullptr);
-  assert(SEISMOMETER_SAMPLE_TYPE_PENDULUM == sample->type);
+  SEISMOMETER_ASSERT(sample != nullptr);
+  SEISMOMETER_ASSERT(SEISMOMETER_SAMPLE_TYPE_PENDULUM == sample->type);
   static absolute_time_t last_sample_time = {0};
 
 #ifdef SEISMOMETER_SAMPLE_DEBUG_PRINT
@@ -266,7 +266,7 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
 
 void sample_handler(const seismometer_sample_s *sample)
 {
-  assert(sample != nullptr);
+  SEISMOMETER_ASSERT(sample != nullptr);
 
   switch(sample->type)
   {
@@ -289,7 +289,7 @@ void sample_handler(const seismometer_sample_s *sample)
     {
       seismometer_time_s time_s;
       absolute_time_t reference_time = rtc_ds3231_get_time(&time_s);
-      assert(absolute_time_diff_us(reference_time, sample->time)==0);
+      SEISMOMETER_ASSERT(absolute_time_diff_us(reference_time, sample->time)==0);
       char time_string[128];
       strftime(time_string, 128, "%FT%T", &time_s);
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC %s trigger time %llu.%06llu\n", 
@@ -342,13 +342,13 @@ void sample_handler(const seismometer_sample_s *sample)
         #endif
         sample_file_open();
       }
-//      assert(sample->alarm_index != 1);
+//      SEISMOMETER_ASSERT(sample->alarm_index != 1);
       break;
     }
     default:
     {
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unsupported sample type %u!\n", sample->type);
-      assert(0);
+      SEISMOMETER_ASSERT(0);
       break;
     }
   }
