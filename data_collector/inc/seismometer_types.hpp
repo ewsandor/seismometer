@@ -87,6 +87,8 @@ typedef struct
 {
   uint8_t identifier[SEISMOMETER_EEPROM_IDENTIFIER_LENGTH];
   uint8_t eeprom_version;
+  bool    reset_eeprom:1;
+  uint8_t pad:7;
 } seismometer_eeprom_data_s;
 
 
