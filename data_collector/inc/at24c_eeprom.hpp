@@ -42,7 +42,7 @@ class at24c_eeprom_c
     /* Reads 'bytes_to_read' bytes from the eeprom into 'buffer' starting at the given 'start_address'. 
         'buffer' must be large enough to hold 'bytes_to_read' bytes.
         Returns number of bytes read */
-    at24c_eeprom_data_size_t read_data(at24c_eeprom_data_address_t start_address, const uint8_t * buffer, at24c_eeprom_data_size_t bytes_to_read);
+    at24c_eeprom_data_size_t read_data(at24c_eeprom_data_address_t start_address, uint8_t * buffer, at24c_eeprom_data_size_t bytes_to_read);
     /* Writes 'bytes_to_write' bytes to the eeprom from 'buffer' starting at the given 'start_address'. 
         'buffer' must hold at least 'bytes_to_read' bytes.
         Returns number of bytes written */
