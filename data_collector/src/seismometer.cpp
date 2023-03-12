@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
@@ -154,7 +155,15 @@ void init()
   } 
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "%ums watchdog active.\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
 }
+
 at24c_eeprom_c eeprom(i2c0, AT24C_EEPROM_ADDRESS_7, AT24C_EEPROM_SIZE_32K);
+static const seismometer_eeprom_data_s default_eeprom_data =
+{
+  .identifier     = EEPROM_IDENTIFIER,
+  .eeprom_version = SEISMOMETER_EEPROM_VERSION_1,
+};
+static seismometer_eeprom_data_s eeprom_data;
+
 void boot()
 {
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting boot.\n");
@@ -162,6 +171,19 @@ void boot()
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   //eeprom.clear_eeprom(0xFF);
   //eeprom.dump_eeprom();
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Loading data from EEPROM.\n");
+  eeprom.read_data(0x0000, (uint8_t*) &eeprom_data, sizeof(seismometer_eeprom_data_s));
+  if((0 !=strncmp((char*)eeprom_data.identifier, EEPROM_IDENTIFIER, SEISMOMETER_EEPROM_IDENTIFIER_LENGTH)) ||
+     (eeprom_data.eeprom_version <= SEISMOMETER_EEPROM_VERSION_INVALID) ||
+     (eeprom_data.eeprom_version >= SEISMOMETER_EEPROM_VERSION_MAX))
+  {
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "EEPROM invalid.\n");
+    eeprom.clear_eeprom(0xFF);
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Programming default EEPROM.\n");
+    eeprom.write_data(0x0000, (uint8_t*) &default_eeprom_data, sizeof(seismometer_eeprom_data_s));
+    eeprom.read_data (0x0000, (uint8_t*) &eeprom_data,         sizeof(seismometer_eeprom_data_s));
+    eeprom.dump_eeprom();
+  }
   error_state_init();
   watchdog_update();
   smps_control_init();

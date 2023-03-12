@@ -74,5 +74,21 @@ typedef struct
 
 } seismometer_sample_s;
 
+enum
+{
+  SEISMOMETER_EEPROM_VERSION_INVALID,
+  SEISMOMETER_EEPROM_VERSION_1,
+  SEISMOMETER_EEPROM_VERSION_MAX,
+};
+
+#define SEISMOMETER_EEPROM_IDENTIFIER_LENGTH 15
+#define EEPROM_IDENTIFIER "SL-SEISMOMETER"
+typedef struct 
+{
+  uint8_t identifier[SEISMOMETER_EEPROM_IDENTIFIER_LENGTH];
+  uint8_t eeprom_version;
+} seismometer_eeprom_data_s;
+
+
 
 #endif /*__SEISMOMETER_TYPES_HPP__*/

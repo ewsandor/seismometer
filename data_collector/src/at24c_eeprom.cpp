@@ -70,6 +70,8 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
 bool at24c_eeprom_c::clear_eeprom(uint8_t value)
 {
   bool ret_val = true;
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Clearing AT24C EEPROM %u with value '0x%x'.\n", address, value);
+
   uint8_t *write_buffer = (uint8_t*)malloc(get_size_bytes());
 
   if(write_buffer != nullptr)
@@ -80,7 +82,7 @@ bool at24c_eeprom_c::clear_eeprom(uint8_t value)
   }
   else
   {
-    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Failed to allocate memory (0x%04X bytes) for AT24C EEPROM write buffer\n", get_size_bytes());
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Failed to allocate memory (0x%04X bytes) for AT24C EEPROM write buffer.\n", get_size_bytes());
     ret_val = false;
   }
 
@@ -115,7 +117,7 @@ void at24c_eeprom_c::dump_eeprom()
   }
   else
   {
-    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Failed to allocate memory (0x%04X bytes) for AT24C EEPROM dump\n", get_size_bytes());
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Failed to allocate memory (0x%04X bytes) for AT24C EEPROM dump.\n", get_size_bytes());
   }
 }
 #endif
