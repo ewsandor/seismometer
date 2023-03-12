@@ -136,6 +136,7 @@ void init()
   stdio_init_all();
   #ifdef LIB_PICO_STDIO_UART
   uart_set_baudrate(uart_default, 921600);
+  stdio_set_translate_crlf(&stdio_uart, false);
   #endif
   #ifdef LIB_PICO_STDIO_USB
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Delaying for USB connection...\n");
