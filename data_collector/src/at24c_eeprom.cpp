@@ -46,8 +46,9 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
 
     while(btw > 0)
     {
-      write_buffer[0] = (bytes_written>>8) & ((AT24C_EEPROM_SIZE_64K==size)?0x1F:0x0F);
-      write_buffer[1] = (bytes_written & 0xFF);
+      at24c_eeprom_data_address_t write_address = (start_address + bytes_written);
+      write_buffer[0] = (write_address >>   8) & ((AT24C_EEPROM_SIZE_64K==size)?0x1F:0x0F);
+      write_buffer[1] = (write_address & 0xFF);
 
       at24c_eeprom_data_size_t btw_now = ((btw > 32)?32:btw);
       memcpy(&write_buffer[2], &buffer[bytes_written], btw_now);
@@ -107,7 +108,7 @@ void at24c_eeprom_c::dump_eeprom()
       uint32_t data_0_h = (read_buffer[itr]    << 24) | (read_buffer[itr+1]  << 16) | (read_buffer[itr+2]  << 8) | (read_buffer[itr+3] );
       uint32_t data_0_l = (read_buffer[itr+4]  << 24) | (read_buffer[itr+5]  << 16) | (read_buffer[itr+6]  << 8) | (read_buffer[itr+7] );
       uint32_t data_1_h = (read_buffer[itr+8]  << 24) | (read_buffer[itr+9]  << 16) | (read_buffer[itr+10] << 8) | (read_buffer[itr+11]);
-      uint32_t data_1_l = (read_buffer[itr+12] << 24) | (read_buffer[itr+13] << 16) | (read_buffer[itr+14] << 8) | (read_buffer[itr+15]  );
+      uint32_t data_1_l = (read_buffer[itr+12] << 24) | (read_buffer[itr+13] << 16) | (read_buffer[itr+14] << 8) | (read_buffer[itr+15]);
 
 
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n", itr, 

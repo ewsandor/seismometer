@@ -24,6 +24,7 @@ add_executable(
                 src/sampler.cpp
                 src/sd_card_spi.cpp
                 src/seismometer.cpp
+                src/seismometer_eeprom.cpp
               )
 
 # Metadata

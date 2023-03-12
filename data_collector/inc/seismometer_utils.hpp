@@ -46,4 +46,10 @@ inline bool        error_state_check(const error_state_e state)
   return (0 != (error_state & (1<<state)));
 }
 
+inline void seismometer_force_reboot()
+{
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Forcing WDT reboot.\n");
+  while(1){tight_loop_contents();}
+}
+
 #endif /*__SEISMOMETER_UTILS_HPP__*/

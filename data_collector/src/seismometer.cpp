@@ -1,7 +1,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
-#include <cstring>
 
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
@@ -10,7 +9,6 @@
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
 
-#include "at24c_eeprom.hpp"
 #include "mpu-6500.hpp"
 #include "adc_manager.hpp"
 #include "rtc_ds3231.hpp"
@@ -19,6 +17,7 @@
 #include "sd_card_spi.hpp"
 #include "seismometer_config.hpp"
 #include "seismometer_debug.hpp"
+#include "seismometer_eeprom.hpp"
 #include "seismometer_utils.hpp"
 
 #define SMPS_CONTROL_PIN 23
@@ -156,57 +155,13 @@ void init()
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "%ums watchdog active.\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
 }
 
-at24c_eeprom_c eeprom(i2c0, AT24C_EEPROM_ADDRESS_7, AT24C_EEPROM_SIZE_32K);
-static const seismometer_eeprom_data_s default_eeprom_data =
-{
-  .header = 
-  {
-    .identifier      = EEPROM_IDENTIFIER,
-    .version         = SEISMOMETER_EEPROM_VERSION_1,
-    .reset_requested = false,
-  },
-  .sample_log_config = 
-  {
-    .key_mask_stdio = 0x00,
-    .key_mask_sd    = ((1<<SAMPLE_LOG_MAX_KEY)-1),
-  },
-};
-static seismometer_eeprom_data_s eeprom_data;
-
 void boot()
 {
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting boot.\n");
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
-  #ifdef SEISMOMETER_DEBUG_BUILD
-  eeprom.dump_eeprom();
-  watchdog_update();
-  #endif
-
-  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Loading data from EEPROM.\n");
-  eeprom.read_data(0x0000, (uint8_t*) &eeprom_data, sizeof(seismometer_eeprom_data_s));
-  if((0 !=strncmp((char*)eeprom_data.header.identifier, EEPROM_IDENTIFIER, SEISMOMETER_EEPROM_IDENTIFIER_LENGTH)) ||
-     (eeprom_data.header.version <= SEISMOMETER_EEPROM_VERSION_INVALID) ||
-     (eeprom_data.header.version >= SEISMOMETER_EEPROM_VERSION_MAX)     ||
-     (true == eeprom_data.header.reset_requested))
-  {
-    watchdog_update();
-    if(true == eeprom_data.header.reset_requested)
-    {
-      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "EEPROM reset requested.\n");
-    }
-    else
-    {
-      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "EEPROM data is invalid.\n");
-    }
-    eeprom.clear_eeprom(0xFF);
-    watchdog_update();
-    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Programming default EEPROM.\n");
-    eeprom.write_data(0x0000, (uint8_t*) &default_eeprom_data, sizeof(seismometer_eeprom_data_s));
-    SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Forcing reboot.\n");
-    while(1){tight_loop_contents();}
-  }
+  eeprom_init();
   watchdog_update();
   error_state_init();
   watchdog_update();
