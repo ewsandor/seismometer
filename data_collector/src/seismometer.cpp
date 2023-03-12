@@ -160,6 +160,7 @@ void boot()
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting boot.\n");
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
+  //eeprom.clear_eeprom(0xFF);
   //eeprom.dump_eeprom();
   error_state_init();
   watchdog_update();

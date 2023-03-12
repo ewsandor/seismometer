@@ -48,6 +48,9 @@ class at24c_eeprom_c
         Returns number of bytes written */
     at24c_eeprom_data_size_t write_data(at24c_eeprom_data_address_t start_address, const uint8_t * buffer, at24c_eeprom_data_size_t bytes_to_write);
 
+    /* Wipes the eeprom and sets every byte to the given value */
+    bool clear_eeprom(uint8_t value);
+
 #ifdef SEISMOMETER_DEBUG_BUILD
     /* Dumps eeprom contents to stdout */
     void dump_eeprom();
