@@ -128,8 +128,22 @@ void static i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
   gpio_pull_up(scl_pin);
 }
 
+static queue_t sample_queue = {0};
+semaphore_t stdio_char_available_ack;
+static void __isr stdio_char_available_cb(void* user_data)
+{
+  if(sem_try_acquire(&stdio_char_available_ack))
+  {
+    seismometer_sample_s sample =
+    {
+      .type      = SEISMOMETER_SAMPLE_TYPE_STDIO_CHAR_AVAILABLE,
+      .semaphore = &stdio_char_available_ack,
+    };
+    queue_add_blocking(&sample_queue, &sample);
+  }
+}
+
 static sample_thread_args_s sampler_thead_args = {0};
-static queue_t              sample_queue       = {0};
 
 void init()
 {
@@ -192,6 +206,10 @@ void boot()
   multicore_launch_core1(sampler_thread_main);
   /* Block until inital sampler task setup is complete */
   sem_acquire_blocking(&boot_semaphore);
+  watchdog_update();
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting STDIO char available callback.\n");
+  sem_init(&stdio_char_available_ack, 1, 1);
+  stdio_set_chars_available_callback(stdio_char_available_cb, nullptr);
   watchdog_update();
   /* Unblock sampler task to start sampling */
   sem_release(&boot_semaphore);

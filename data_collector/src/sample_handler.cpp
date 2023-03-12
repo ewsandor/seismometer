@@ -1,11 +1,13 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 #include <f_util.h>
 #include <ff.h>
 #include <hardware/gpio.h>
 #include <pico/time.h>
+#include <pico/stdio.h>
 
 #include "filter_coefficients.hpp"
 #include "fir_filter.hpp"
@@ -244,6 +246,42 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
   last_sample_time = sample->time;
 }
 
+static void handle_stdin_command(char * command)
+{
+  SEISMOMETER_ASSERT(command != nullptr);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "Handling command: '%s'\n", command);
+}
+
+#define STDIN_BUFFER_SIZE 128
+static void read_stdin()
+{
+  static char stdin_buffer[STDIN_BUFFER_SIZE] = {'\0'};
+  static int  i = 0;
+  while(int c = getchar_timeout_us(0))
+  {
+    if(PICO_ERROR_TIMEOUT == c)
+    {
+      break;
+    }
+    else
+    {
+      if('\n' != c)
+      {
+        stdin_buffer[i] = c;
+        i++;
+      }
+      if(('\n' == c) || ((STDIN_BUFFER_SIZE-1) == i))
+      {
+        /* Handle command on newline or when STDIN buffer is full (-1 for terminating '\0' char)*/
+        SEISMOMETER_ASSERT('\0' == stdin_buffer[STDIN_BUFFER_SIZE-1]);
+        handle_stdin_command(stdin_buffer);
+        memset(stdin_buffer, '\0', i);
+        i = 0;
+      }
+    }
+  }
+}
+
 
 void sample_handler(const seismometer_sample_s *sample)
 {
@@ -324,6 +362,12 @@ void sample_handler(const seismometer_sample_s *sample)
         sample_file_open();
       }
 //      SEISMOMETER_ASSERT(sample->alarm_index != 1);
+      break;
+    }
+    case SEISMOMETER_SAMPLE_TYPE_STDIO_CHAR_AVAILABLE:
+    {
+      read_stdin();
+      sem_release(sample->semaphore);
       break;
     }
     default:

@@ -3,6 +3,8 @@
 #include <cassert>
 #include <ctime>
 
+#include <pico/sem.h>
+
 /* Time Types */
 typedef struct tm seismometer_time_s;
 typedef time_t    seismometer_time_t;
@@ -54,6 +56,7 @@ typedef enum
   SEISMOMETER_SAMPLE_TYPE_PENDULUM,
   SEISMOMETER_SAMPLE_TYPE_RTC_TICK,
   SEISMOMETER_SAMPLE_TYPE_RTC_ALARM,
+  SEISMOMETER_SAMPLE_TYPE_STDIO_CHAR_AVAILABLE,
 } seismometer_sample_type_e;
 
 typedef uint sample_index_t;
@@ -66,10 +69,11 @@ typedef struct
 
   union 
   {
-    m_celsius_t             temperature;
-    acceleration_sample_s   acceleration;
-    pendulum_sample_s       pendulum;
-    unsigned int            alarm_index;
+    m_celsius_t            temperature;
+    acceleration_sample_s  acceleration;
+    pendulum_sample_s      pendulum;
+    unsigned int           alarm_index;
+    semaphore_t           *semaphore;
   };
 
 } seismometer_sample_s;
