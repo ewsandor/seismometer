@@ -15,6 +15,7 @@ option(ENABLE_ZLIB_DATA_FILE_COMPRESSION "Option to enable ZLIB datafile compres
 add_executable( 
                 seismometer
                 src/adc_manager.cpp
+                src/at24c_eeprom.cpp
                 src/filter_coefficients.cpp
                 src/fir_filter.cpp
                 src/mpu-6500.cpp
