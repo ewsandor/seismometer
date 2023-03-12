@@ -104,13 +104,16 @@ void at24c_eeprom_c::dump_eeprom()
 
     while(itr < get_size_bytes())
     {
-      uint32_t data_h = (read_buffer[itr]   << 24) | (read_buffer[itr+1] << 16) | (read_buffer[itr+2] << 8) | (read_buffer[itr+3]);
-      uint32_t data_l = (read_buffer[itr+4] << 24) | (read_buffer[itr+5] << 16) | (read_buffer[itr+6] << 8) | (read_buffer[itr+7]);
+      uint32_t data_0_h = (read_buffer[itr]    << 24) | (read_buffer[itr+1]  << 16) | (read_buffer[itr+2]  << 8) | (read_buffer[itr+3] );
+      uint32_t data_0_l = (read_buffer[itr+4]  << 24) | (read_buffer[itr+5]  << 16) | (read_buffer[itr+6]  << 8) | (read_buffer[itr+7] );
+      uint32_t data_1_h = (read_buffer[itr+8]  << 24) | (read_buffer[itr+9]  << 16) | (read_buffer[itr+10] << 8) | (read_buffer[itr+11]);
+      uint32_t data_1_l = (read_buffer[itr+12] << 24) | (read_buffer[itr+13] << 16) | (read_buffer[itr+14] << 8) | (read_buffer[itr+15]  );
 
 
-      SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "%04X: %04X %04X %04X %04X\n",
-        itr, (data_h >> 16), (data_h & 0xFFFF), (data_l >> 16), (data_l & 0xFFFF));
-      itr += 8;
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n", itr, 
+        (data_0_h >> 16), (data_0_h & 0xFFFF), (data_0_l >> 16), (data_0_l & 0xFFFF),
+        (data_1_h >> 16), (data_1_h & 0xFFFF), (data_1_l >> 16), (data_1_l & 0xFFFF));
+      itr += 16;
     }
 
     free(read_buffer);
