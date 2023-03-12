@@ -14,7 +14,7 @@
 #include "seismometer_utils.hpp"
 
 static sample_thread_args_s *args_ptr     = nullptr;
-static repeating_timer_t     sample_timer = {0};
+static __scratch_y("sampler_thread_data") repeating_timer_t sample_timer = {0};
 #define SAMPLE_TRIGGER_QUEUE_SIZE 2
 typedef enum
 {
@@ -32,7 +32,7 @@ typedef struct
     absolute_time_t timestamp;
   };
 } sample_trigger_s;
-static queue_t sample_trigger_queue = {0};
+static queue_t __scratch_y("sampler_thread_data") sample_trigger_queue = {0};
 
 void sampler_thread_pass_args(sample_thread_args_s *args)
 {
@@ -40,7 +40,7 @@ void sampler_thread_pass_args(sample_thread_args_s *args)
   args_ptr = args;
 }
 
-static bool sample_timer_callback(repeating_timer_t *rt)
+static bool __isr __time_critical_func(sample_timer_callback)(repeating_timer_t *rt)
 {
   smps_control_force_pwm(SMPS_CONTROL_CLIENT_SAMPLER);
   sample_trigger_s sample_trigger = {.trigger=SAMPLE_TRIGGER_SAMPLE_PERIOD};
@@ -48,7 +48,7 @@ static bool sample_timer_callback(repeating_timer_t *rt)
   return true; /*true to continue repeating, false to stop.*/
 }
 
-static void sample_mpu_6500(sample_index_t index, const absolute_time_t *time)
+static void __time_critical_func(sample_mpu_6500)(sample_index_t index, const absolute_time_t *time)
 {
   /* Sample sensor temperature */
   seismometer_sample_s temperature_sample; 
@@ -73,7 +73,7 @@ static void sample_mpu_6500(sample_index_t index, const absolute_time_t *time)
   SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &acceleration_sample));
 }
 
-static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
+static void __time_critical_func(sample_pendulum)(sample_index_t index, const absolute_time_t *time)
 {
   /* Sample Pendulum Voltage */
   seismometer_sample_s sample; 
@@ -87,7 +87,7 @@ static void sample_pendulum(sample_index_t index, const absolute_time_t *time)
   SEISMOMETER_ASSERT_CALL(queue_try_add(args_ptr->sample_queue, &sample));
 }
 
-static void rtc_alarm_cb(void* user_data_ptr)
+static void __time_critical_func(rtc_alarm_cb)(void* user_data_ptr)
 {
   seismometer_sample_s sample; 
   memset(&sample, 0, sizeof(seismometer_sample_s));
@@ -97,7 +97,7 @@ static void rtc_alarm_cb(void* user_data_ptr)
 }
 
 #define RTC_INTERRUPT_PIN 22
-static void gpio_irq_callback(uint gpio, uint32_t event_mask)
+static void __isr __time_critical_func(gpio_irq_callback)(uint gpio, uint32_t event_mask)
 {
   switch(gpio)
   {
@@ -120,7 +120,7 @@ static void gpio_irq_callback(uint gpio, uint32_t event_mask)
   }
 }
 
-void sampler_thread_main()
+void __time_critical_func(sampler_thread_main)()
 {
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing sample trigger queue.\n");
   queue_init(&sample_trigger_queue, sizeof(sample_trigger_s), SAMPLE_TRIGGER_QUEUE_SIZE);
