@@ -179,6 +179,11 @@ void boot()
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
+  #ifdef SEISMOMETER_DEBUG_BUILD
+  eeprom.dump_eeprom();
+  watchdog_update();
+  #endif
+
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Loading data from EEPROM.\n");
   eeprom.read_data(0x0000, (uint8_t*) &eeprom_data, sizeof(seismometer_eeprom_data_s));
   if((0 !=strncmp((char*)eeprom_data.header.identifier, EEPROM_IDENTIFIER, SEISMOMETER_EEPROM_IDENTIFIER_LENGTH)) ||
