@@ -87,7 +87,7 @@ void eeprom_init()
     watchdog_update();
     if(true == eeprom_data.header.reset_requested)
     {
-      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "EEPROM reset requested.\n");
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "EEPROM reset requested.\n");
     }
     else
     {
