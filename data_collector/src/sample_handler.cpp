@@ -15,25 +15,6 @@
 #include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
-typedef enum
-{
-  SAMPLE_LOG_INVALID,
-  SAMPLE_LOG_ACCEL_X,
-  SAMPLE_LOG_ACCEL_Y,
-  SAMPLE_LOG_ACCEL_Z,
-  SAMPLE_LOG_ACCEL_M,
-  SAMPLE_LOG_ACCEL_X_FILTERED,
-  SAMPLE_LOG_ACCEL_Y_FILTERED,
-  SAMPLE_LOG_ACCEL_Z_FILTERED,
-  SAMPLE_LOG_ACCEL_M_FILTERED,
-  SAMPLE_LOG_ACCEL_TEMP,
-  SAMPLE_LOG_PENDULUM_10X,
-  SAMPLE_LOG_PENDULUM_100X,
-  SAMPLE_LOG_PENDULUM_FILTERED,
-  SAMPLE_LOG_MAX_KEY,
-} sample_log_key_e;
-typedef unsigned int sample_log_key_mask_t;
-
 /* Length of sample data filename not including null character i.e. 'seismometer_2023-03-06.dat\0' */
 #define SAMPLE_DATA_FILENAME_LENGTH 29
 FIL sample_data_file;
@@ -94,22 +75,22 @@ void sample_file_close()
   }
 }
 
-sample_log_key_mask_t sample_index_mask_stdio = 0x00;
-sample_log_key_mask_t sample_index_mask_sd    = ((1<<SAMPLE_LOG_MAX_KEY)-1);
+sample_log_key_mask_t sample_key_mask_stdio = 0x00;
+sample_log_key_mask_t sample_key_mask_sd    = ((1<<SAMPLE_LOG_MAX_KEY)-1);
 static inline void log_sample(sample_log_key_e key, sample_index_t index, uint64_t timestamp, int64_t data)
 {
   SEISMOMETER_ASSERT(key < SAMPLE_LOG_MAX_KEY);
-  if(0 != ((1<<key) & (sample_index_mask_stdio | sample_index_mask_sd)))
+  if(0 != ((1<<key) & (sample_key_mask_stdio | sample_key_mask_sd)))
   {
     char buffer[48];
     snprintf(buffer, sizeof(buffer), "S|%02X|%08X|%016llX|%016llX", (uint8_t)key, (uint32_t)index, timestamp, data);
 
-    if(0 != ((1<<key) & sample_index_mask_stdio))
+    if(0 != ((1<<key) & sample_key_mask_stdio))
     {
       puts(buffer);
     }
 
-    if(0 != ((1<<key) & sample_index_mask_sd))
+    if(0 != ((1<<key) & sample_key_mask_sd))
     {
       if(!error_state_check(ERROR_STATE_SD_SPI_0_SAMPLE_FILE_ERROR))
       {

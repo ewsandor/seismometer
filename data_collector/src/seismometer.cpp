@@ -159,8 +159,17 @@ void init()
 at24c_eeprom_c eeprom(i2c0, AT24C_EEPROM_ADDRESS_7, AT24C_EEPROM_SIZE_32K);
 static const seismometer_eeprom_data_s default_eeprom_data =
 {
-  .identifier     = EEPROM_IDENTIFIER,
-  .eeprom_version = SEISMOMETER_EEPROM_VERSION_1,
+  .header = 
+  {
+    .identifier      = EEPROM_IDENTIFIER,
+    .version         = SEISMOMETER_EEPROM_VERSION_1,
+    .reset_requested = false,
+  },
+  .sample_log_config = 
+  {
+    .key_mask_stdio = 0x00,
+    .key_mask_sd    = ((1<<SAMPLE_LOG_MAX_KEY)-1),
+  },
 };
 static seismometer_eeprom_data_s eeprom_data;
 
@@ -172,13 +181,13 @@ void boot()
   watchdog_update();
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Loading data from EEPROM.\n");
   eeprom.read_data(0x0000, (uint8_t*) &eeprom_data, sizeof(seismometer_eeprom_data_s));
-  if((0 !=strncmp((char*)eeprom_data.identifier, EEPROM_IDENTIFIER, SEISMOMETER_EEPROM_IDENTIFIER_LENGTH)) ||
-     (eeprom_data.eeprom_version <= SEISMOMETER_EEPROM_VERSION_INVALID) ||
-     (eeprom_data.eeprom_version >= SEISMOMETER_EEPROM_VERSION_MAX)     ||
-     (true == eeprom_data.reset_eeprom))
+  if((0 !=strncmp((char*)eeprom_data.header.identifier, EEPROM_IDENTIFIER, SEISMOMETER_EEPROM_IDENTIFIER_LENGTH)) ||
+     (eeprom_data.header.version <= SEISMOMETER_EEPROM_VERSION_INVALID) ||
+     (eeprom_data.header.version >= SEISMOMETER_EEPROM_VERSION_MAX)     ||
+     (true == eeprom_data.header.reset_requested))
   {
     watchdog_update();
-    if(true == eeprom_data.reset_eeprom)
+    if(true == eeprom_data.header.reset_requested)
     {
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "EEPROM reset requested.\n");
     }
