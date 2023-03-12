@@ -9,6 +9,7 @@
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
 
+#include "at24c_eeprom.hpp"
 #include "mpu-6500.hpp"
 #include "adc_manager.hpp"
 #include "rtc_ds3231.hpp"
@@ -153,12 +154,13 @@ void init()
   } 
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "%ums watchdog active.\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
 }
-
+at24c_eeprom_c eeprom(i2c0, AT24C_EEPROM_ADDRESS_7, AT24C_EEPROM_SIZE_32K);
 void boot()
 {
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting boot.\n");
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
   i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
+  //eeprom.dump_eeprom();
   error_state_init();
   watchdog_update();
   smps_control_init();

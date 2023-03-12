@@ -1,10 +1,11 @@
+#include <cstdlib>
 #include <cstring>
 
 #include "at24c_eeprom.hpp"
 #include "seismometer_debug.hpp"
 #include "seismometer_utils.hpp"
 
-#define AT4C_EEPROM_BASE_ADDRESS 0xA0
+#define AT4C_EEPROM_BASE_ADDRESS 0x50
 
 at24c_eeprom_c::at24c_eeprom_c(i2c_inst_t * i2c_init, at24c_eeprom_address_e address_init, at24c_eeprom_size_e size_init)
   : address(address_init), size(size_init), i2c_addr(AT4C_EEPROM_BASE_ADDRESS | (address_init & 0x7))
@@ -57,3 +58,27 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
 
   return bytes_written;
 }
+
+#ifdef SEISMOMETER_DEBUG_BUILD
+void at24c_eeprom_c::dump_eeprom()
+{
+  uint8_t *read_buffer = (uint8_t*)malloc(get_size_bytes());
+
+  SEISMOMETER_ASSERT_CALL(get_size_bytes() == read_data(0x00, read_buffer, get_size_bytes()));
+
+  at24c_eeprom_data_address_t itr = 0;
+
+  while(itr < get_size_bytes())
+  {
+    uint64_t data = (read_buffer[itr]   << 56) | (read_buffer[itr+1] << 48) | (read_buffer[itr+2] << 40) | (read_buffer[itr+3] << 32) |
+                    (read_buffer[itr+4] << 24) | (read_buffer[itr+5] << 16) | (read_buffer[itr+6] <<  8) | (read_buffer[itr+7]);
+
+
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "AT24C EEPROM %u dump 0x%04X: 0x%016llX\n",
+      address, itr, data);
+    itr += 8;
+  }
+
+  free(read_buffer);
+}
+#endif

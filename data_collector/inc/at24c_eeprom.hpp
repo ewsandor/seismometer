@@ -37,7 +37,7 @@ class at24c_eeprom_c
     at24c_eeprom_c(i2c_inst_t *, at24c_eeprom_address_e, at24c_eeprom_size_e);
 
     inline at24c_eeprom_size_e      get_size()       const { return size; };
-    inline at24c_eeprom_data_size_t get_size_bytes() const { return ((AT24C_EEPROM_SIZE_64K==size)?4096:8192); };
+    inline at24c_eeprom_data_size_t get_size_bytes() const { return ((AT24C_EEPROM_SIZE_64K==size)?8192:4096); };
 
     /* Reads 'bytes_to_read' bytes from the eeprom into 'buffer' starting at the given 'start_address'. 
         'buffer' must be large enough to hold 'bytes_to_read' bytes.
@@ -47,6 +47,11 @@ class at24c_eeprom_c
         'buffer' must hold at least 'bytes_to_read' bytes.
         Returns number of bytes written */
     at24c_eeprom_data_size_t write_data(at24c_eeprom_data_address_t start_address, const uint8_t * buffer, at24c_eeprom_data_size_t bytes_to_write);
+
+#ifdef SEISMOMETER_DEBUG_BUILD
+    /* Dumps eeprom contents to stdout */
+    void dump_eeprom();
+#endif
 };
 
 #endif /* __AT24C_EEPROM_HPP__ */
