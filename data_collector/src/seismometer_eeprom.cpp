@@ -107,8 +107,8 @@ void eeprom_init()
 
 bool eeprom_request_reset()
 {
-  bool ret_val = false;
-  SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Requesting EEPROM reset at reboot.\n");
+  bool ret_val = true;
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Requesting EEPROM reset at reboot.\n");
 
   seismometer_eeprom_header_s new_header = eeprom_data.header;
   new_header.reset_requested=1;
@@ -116,6 +116,11 @@ bool eeprom_request_reset()
   if(eeprom_write_header(&new_header))
   {
     seismometer_force_reboot();
+  }
+  else
+  {
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Failed to place EEPROM reset request.\n");
+    ret_val = false;
   }
 
   return ret_val;
