@@ -148,8 +148,6 @@ bool __time_critical_func(seismometer_i2c_unlock)(seismometer_i2c_handle_s* i2c_
   return true;
 }
 
-
-
 static queue_t sample_queue = {0};
 semaphore_t stdio_char_available_ack;
 static void __isr stdio_char_available_cb(void* user_data)

@@ -265,6 +265,22 @@ static void handle_stdin_command(char * command)
       }
       break;
     }
+    case 'S':
+    {
+      if(strncmp(command, "SAMPLEKEYMASKSD", 15) == 0)
+      {
+        command_handled = true;
+        sample_key_mask_sd = strtol(&command[15], nullptr, 16) & ((1<<SAMPLE_LOG_MAX_KEY)-1);
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting SD card sample key mask '0x%lX'.\n", sample_key_mask_sd);
+      }
+      if(strncmp(command, "SAMPLEKEYMASKSTDOUT", 19) == 0)
+      {
+        command_handled = true;
+        sample_key_mask_stdio = strtol(&command[19], nullptr, 16) & ((1<<SAMPLE_LOG_MAX_KEY)-1);
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting STDOUT sample key mask '0x%lX'.\n", sample_key_mask_stdio);
+      }
+      break;
+    }
     case 'T':
     {
       if((command[1] >= '0') || (command[1] <= '9'))

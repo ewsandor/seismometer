@@ -4,29 +4,32 @@ This is a project to create a homemade seismometer
 ## Usage
 ### Data Collector
 ### Sample Format
-  Samples are output with the C-format string `"S|%02X|%08X|%016llX|%016llX"` which corresponds to `S|<key>|<index>|<timestamp>|<data>`.
+  Samples are output with the C-format string `S|%02X|%08X|%016llX|%016llX` which corresponds to `S|<key>|<index>|<timestamp>|<data>`.  Samples may be easily filtered via `grep 'S|<key>' and separated by the '|' deliminator.
 
   Currently the following log keys are defined:
 ```
-  - SAMPLE_LOG_INVALID           =  0
-  - SAMPLE_LOG_ACCEL_X           =  1
-  - SAMPLE_LOG_ACCEL_Y           =  2
-  - SAMPLE_LOG_ACCEL_Z           =  3
-  - SAMPLE_LOG_ACCEL_M           =  4
-  - SAMPLE_LOG_ACCEL_X_FILTERED  =  5
-  - SAMPLE_LOG_ACCEL_Y_FILTERED  =  6
-  - SAMPLE_LOG_ACCEL_Z_FILTERED  =  7
-  - SAMPLE_LOG_ACCEL_M_FILTERED  =  8
-  - SAMPLE_LOG_ACCEL_TEMP        =  9
-  - SAMPLE_LOG_PENDULUM_10X      = 10
-  - SAMPLE_LOG_PENDULUM_100X     = 11
-  - SAMPLE_LOG_PENDULUM_FILTERED = 12
+  - INVALID                  =  0
+  - Accelerometer X          =  1
+  - Accelerometer Y          =  2
+  - Accelerometer Z          =  3
+  - Accelerometer M          =  4
+  - Accelerometer X Filtered =  5
+  - Accelerometer Y Filtered =  6
+  - Accelerometer Z Filtered =  7
+  - Accelerometer M Filtered =  8
+  - Accelerometer TEMP       =  9
+  - Pendulum 10X             = 10
+  - Pendulum 100X            = 11
+  - Pendulum Filtered        = 12
 ```
  
 #### Commands
   - Reset EEPROM: `RESETEEPROM` 
     - Resets EEPROM to default values
     - Command input must be an exact match (e.g. no trailing space)
+  - Set Sample Key Mask: `SAMPLEKEYMASKSD<key mask>`, `SAMPLEKEYMASKSTDOUT<key mask>`
+    - Configures which sample channels are actively logged to the SD card and STDOUT respectively
+    - Key masks must be passed as hexadecimal mask with each bit corresponding to a key to be logged (LSB is key '0')
   - Set RTC: `T<unix epoch in seconds>` 
     - Example setting RTC via Bash and UART: `echo T$(date +%s) > /dev/ttyACM0`
 
