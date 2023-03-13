@@ -258,7 +258,12 @@ static void handle_stdin_command(char * command)
   {
     case 'R':
     {
-      if(strncmp(command, "RESETEEPROM", 11) == 0)
+      if(strncmp(command, "REBOOT", 6) == 0)
+      {
+        command_handled = true;
+        seismometer_force_reboot();
+      }
+       if(strncmp(command, "RESETEEPROM", 11) == 0)
       {
         command_handled = true;
         SEISMOMETER_ASSERT_CALL(eeprom_request_reset());

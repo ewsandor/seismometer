@@ -24,6 +24,8 @@ This is a project to create a homemade seismometer
 ```
  
 #### Commands
+  - Force a soft-reboot: `REBOOT`
+    - Reboot is triggered via a watchdog timer timeout so soft-reboot cannot be triggered if stalled or if the watchdog timer is disabled.
   - Reset EEPROM: `RESETEEPROM` 
     - Resets EEPROM to default values
     - Command input must be an exact match (e.g. no trailing space)
