@@ -4,7 +4,7 @@ This is a project to create a homemade seismometer
 ## Usage
 ### Data Collector
 ### Sample Format
-  Samples are output with the C-format string `S|%02X|%08X|%016llX|%016llX` which corresponds to `S|<key>|<index>|<timestamp>|<data>`.  Samples may be easily filtered via `grep 'S|<key>' and separated by the '|' deliminator.
+  Samples are output with the C-format string `S|%02X|%08X|%016llX|%016llX` which corresponds to `S|<key>|<index>|<timestamp>|<data>`.  Samples may be easily filtered via `grep 'S|<key>'` and separated by the `|` deliminator.
 
   Currently the following log keys are defined:
 ```
