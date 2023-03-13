@@ -1,6 +1,12 @@
 # Sandor Laboratories Seismometer
 This is a project to create a homemade seismometer
 
+## Usage
+### Data Collector
+#### Commands
+  - Set RTC: `T<unix epoch in seconds>` 
+    - Example setting RTC via Bash and UART: `echo T$(date +%s) > /dev/ttyACM0`
+
 ## Dependencies
 ### Data Collector 
 - SD Card Library: carlk3's no-OS-FatFS-SD-SPI-RPi-Pico 
