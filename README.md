@@ -3,8 +3,28 @@ This is a project to create a homemade seismometer
 
 ## Usage
 ### Data Collector
+### Sample Format
+  Samples are output with the C-format string `"S|%02X|%08X|%016llX|%016llX"` which corresponds to `S|<key>|<index>|<timestamp>|<data>`.
+
+  Currently the following log keys are defined:
+```
+  - SAMPLE_LOG_INVALID           =  0
+  - SAMPLE_LOG_ACCEL_X           =  1
+  - SAMPLE_LOG_ACCEL_Y           =  2
+  - SAMPLE_LOG_ACCEL_Z           =  3
+  - SAMPLE_LOG_ACCEL_M           =  4
+  - SAMPLE_LOG_ACCEL_X_FILTERED  =  5
+  - SAMPLE_LOG_ACCEL_Y_FILTERED  =  6
+  - SAMPLE_LOG_ACCEL_Z_FILTERED  =  7
+  - SAMPLE_LOG_ACCEL_M_FILTERED  =  8
+  - SAMPLE_LOG_ACCEL_TEMP        =  9
+  - SAMPLE_LOG_PENDULUM_10X      = 10
+  - SAMPLE_LOG_PENDULUM_100X     = 11
+  - SAMPLE_LOG_PENDULUM_FILTERED = 12
+```
+ 
 #### Commands
-  - Reset EEPROm: `RESETEEPROM` 
+  - Reset EEPROM: `RESETEEPROM` 
     - Resets EEPROM to default values
     - Command input must be an exact match (e.g. no trailing space)
   - Set RTC: `T<unix epoch in seconds>` 
