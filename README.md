@@ -4,6 +4,9 @@ This is a project to create a homemade seismometer
 ## Usage
 ### Data Collector
 #### Commands
+  - Reset EEPROm: `RESETEEPROM` 
+    - Resets EEPROM to default values
+    - Command input must be an exact match (e.g. no trailing space)
   - Set RTC: `T<unix epoch in seconds>` 
     - Example setting RTC via Bash and UART: `echo T$(date +%s) > /dev/ttyACM0`
 

@@ -75,7 +75,7 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
 bool at24c_eeprom_c::clear_eeprom(uint8_t value)
 {
   bool ret_val = true;
-  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Clearing AT24C EEPROM %u with value '0x%x'.\n", address, value);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Clearing AT24C EEPROM %u with value '0x%X'.\n", address, value);
 
   uint8_t *write_buffer = (uint8_t*)malloc(get_size_bytes());
 

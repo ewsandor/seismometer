@@ -15,6 +15,7 @@
 #include "sample_handler.hpp"
 #include "sd_card_spi.hpp"
 #include "seismometer_debug.hpp"
+#include "seismometer_eeprom.hpp"
 #include "seismometer_utils.hpp"
 
 /* Length of sample data filename not including null character i.e. 'seismometer_2023-03-06.dat\0' */
@@ -251,22 +252,40 @@ static void handle_stdin_command(char * command)
   SEISMOMETER_ASSERT(command != nullptr);
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "Handling command: '%s'.\n", command);
 
+  bool command_handled = false;
+
   switch(command[0])
   {
-    case 'T':
-    case 't':
+    case 'R':
     {
-      seismometer_time_t t = atoll(&command[1]);
-      SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting RTC with time '%llu'.\n", t);
-      rtc_ds3231_set(t);
+      if(strncmp(command, "RESETEEPROM", 11) == 0)
+      {
+        command_handled = true;
+        SEISMOMETER_ASSERT_CALL(eeprom_request_reset());
+      }
+      break;
+    }
+    case 'T':
+    {
+      if((command[1] >= '0') || (command[1] <= '9'))
+      {
+        command_handled = true;
+        seismometer_time_t t = atoll(&command[1]);
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting RTC with time '%llu'.\n", t);
+        rtc_ds3231_set(t);
+      }
       
       break;
     }
     default:
     {
-      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unrecognized command: '%s'.\n", command);
       break;
     }
+  }
+
+  if(!command_handled)
+  {
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unrecognized command: '%s'.\n", command);
   }
 }
 

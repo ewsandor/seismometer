@@ -135,13 +135,13 @@ void static i2c_init(seismometer_i2c_handle_s *i2c_handle, i2c_inst_t * i2c, uin
   gpio_pull_up(sda_pin);
   gpio_pull_up(scl_pin);
 }
-bool seismometer_i2c_lock  (seismometer_i2c_handle_s* i2c_handle) 
+bool __time_critical_func(seismometer_i2c_lock)(seismometer_i2c_handle_s* i2c_handle) 
 {  
   SEISMOMETER_ASSERT(i2c_handle != nullptr);
   mutex_enter_blocking(&i2c_handle->mutex); 
   return true;
 };
-bool seismometer_i2c_unlock(seismometer_i2c_handle_s* i2c_handle)
+bool __time_critical_func(seismometer_i2c_unlock)(seismometer_i2c_handle_s* i2c_handle)
 {
   SEISMOMETER_ASSERT(i2c_handle != nullptr);
   mutex_exit(&i2c_handle->mutex);
