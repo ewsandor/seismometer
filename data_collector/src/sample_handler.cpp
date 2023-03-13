@@ -249,7 +249,24 @@ static void pendulum_sample_handler(const seismometer_sample_s *sample)
 static void handle_stdin_command(char * command)
 {
   SEISMOMETER_ASSERT(command != nullptr);
-  SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "Handling command: '%s'\n", command);
+  SEISMOMETER_PRINTF(SEISMOMETER_LOG_DEBUG, "Handling command: '%s'.\n", command);
+
+  switch(command[0])
+  {
+    case 'T':
+    case 't':
+    {
+      seismometer_time_t t = atoll(&command[1]);
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting RTC with time '%llu'.\n", t);
+      
+      break;
+    }
+    default:
+    {
+      SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Unrecognized command: '%s'.\n", command);
+      break;
+    }
+  }
 }
 
 #define STDIN_BUFFER_SIZE 128
