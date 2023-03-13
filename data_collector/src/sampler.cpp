@@ -44,7 +44,12 @@ static bool __isr __time_critical_func(sample_timer_callback)(repeating_timer_t 
 {
   smps_control_force_pwm(SMPS_CONTROL_CLIENT_SAMPLER);
   sample_trigger_s sample_trigger = {.trigger=SAMPLE_TRIGGER_SAMPLE_PERIOD};
-  SEISMOMETER_ASSERT_CALL(queue_try_add((queue_t*) rt->user_data, &sample_trigger));
+
+  if(!queue_try_add((queue_t*) rt->user_data, &sample_trigger))
+  {
+    SEISMOMETER_PRINTF(SEISMOMETER_LOG_WARNING, "PERIODIC SAMPLE DROP!\n");
+  }
+
   return true; /*true to continue repeating, false to stop.*/
 }
 
@@ -109,7 +114,10 @@ static void __isr __time_critical_func(gpio_irq_callback)(uint gpio, uint32_t ev
         .trigger  =SAMPLE_TRIGGER_RTC_TICK,
         .timestamp=get_absolute_time(),
       };
-      SEISMOMETER_ASSERT_CALL(queue_try_add(&sample_trigger_queue, &sample_trigger));
+      if(!queue_try_add(&sample_trigger_queue, &sample_trigger))
+      {
+        SEISMOMETER_PRINTF(SEISMOMETER_LOG_WARNING, "RTC TICK SAMPLE DROP!\n");
+      }
       break;
     }
     default:

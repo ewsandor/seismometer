@@ -33,7 +33,6 @@ typedef struct
 
 typedef struct 
 {
-  i2c_inst_t               *i2c_inst;
   seismometer_i2c_handle_s *i2c_handle;
   critical_section_t        critical_section;
   rtc_ds3231_data_s         data;
@@ -216,7 +215,7 @@ void rtc_ds3231_set(const seismometer_time_t time)
   write_buffer[0] = 0x0F;
   SEISMOMETER_ASSERT_CALL(1 == i2c_write_blocking(context.i2c_handle->i2c_inst, RTC_DS3231_I2C_ADDRESS, write_buffer, 1, false));
   /* Get current status register */
-  SEISMOMETER_ASSERT_CALL(1 == i2c_read_blocking(context.i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
+  SEISMOMETER_ASSERT_CALL(1 == i2c_read_blocking(context.i2c_handle->i2c_inst, RTC_DS3231_I2C_ADDRESS, &write_buffer[1], 1, false));
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "RTC status register 0x%x\n", write_buffer[1]);
   /* Clear Oscillator Stop Flag */
   write_buffer[1] &= ~((1<<7) /* OSF */);

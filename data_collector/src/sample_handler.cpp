@@ -258,6 +258,7 @@ static void handle_stdin_command(char * command)
     {
       seismometer_time_t t = atoll(&command[1]);
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Setting RTC with time '%llu'.\n", t);
+      rtc_ds3231_set(t);
       
       break;
     }
