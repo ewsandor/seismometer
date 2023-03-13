@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
@@ -118,15 +119,36 @@ static void status_led_update(bool enabled)
   }
 }
 
-void static i2c_init(i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
+void static i2c_init(seismometer_i2c_handle_s *i2c_handle, i2c_inst_t * i2c, uint sda_pin, uint scl_pin, uint baud)
 {
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Initializing I2C with SDA pin %u and SCL pin %u with %uhz baud.\n", sda_pin, scl_pin, baud);
+
+  SEISMOMETER_ASSERT(i2c        != nullptr);
+  SEISMOMETER_ASSERT(i2c_handle != nullptr);
+
+  i2c_handle->i2c_inst = i2c;
+  mutex_init(&i2c_handle->mutex);
+
   i2c_init(i2c, baud);
   gpio_set_function(sda_pin, GPIO_FUNC_I2C);
   gpio_set_function(scl_pin, GPIO_FUNC_I2C);
   gpio_pull_up(sda_pin);
   gpio_pull_up(scl_pin);
 }
+bool seismometer_i2c_lock  (seismometer_i2c_handle_s* i2c_handle) 
+{  
+  SEISMOMETER_ASSERT(i2c_handle != nullptr);
+  mutex_enter_blocking(&i2c_handle->mutex); 
+  return true;
+};
+bool seismometer_i2c_unlock(seismometer_i2c_handle_s* i2c_handle)
+{
+  SEISMOMETER_ASSERT(i2c_handle != nullptr);
+  mutex_exit(&i2c_handle->mutex);
+  return true;
+}
+
+
 
 static queue_t sample_queue = {0};
 semaphore_t stdio_char_available_ack;
@@ -170,13 +192,14 @@ void init()
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "%ums watchdog active.\n", SEISMOMETER_WATCHDOG_PERIOD_MS);
 }
 
+seismometer_i2c_handle_s i2c0_handle;
 void boot()
 {
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Starting boot.\n");
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
-  i2c_init(i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
+  i2c_init(&i2c0_handle, i2c0, PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, 100*1000);
   watchdog_update();
-  eeprom_init();
+  eeprom_init(&i2c0_handle);
   watchdog_update();
   error_state_init();
   watchdog_update();
@@ -186,11 +209,11 @@ void boot()
   watchdog_update();
   status_led_init();
   watchdog_update();
-  mpu_6500_init(i2c0);
+  mpu_6500_init(&i2c0_handle);
   watchdog_update();
 //  mpu_6500_calibrate();
   watchdog_update();
-  rtc_ds3231_init(i2c0);
+  rtc_ds3231_init(&i2c0_handle);
   watchdog_update();
   adc_manager_init(ADC_CH_TO_MASK(ADC_CH_PENDULUM_10X) | ADC_CH_TO_MASK(ADC_CH_PENDULUM_100X));
   watchdog_update();

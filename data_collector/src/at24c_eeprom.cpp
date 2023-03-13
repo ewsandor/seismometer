@@ -7,13 +7,13 @@
 
 #define AT4C_EEPROM_BASE_ADDRESS 0x50
 
-at24c_eeprom_c::at24c_eeprom_c(i2c_inst_t * i2c_init, at24c_eeprom_address_e address_init, at24c_eeprom_size_e size_init)
+at24c_eeprom_c::at24c_eeprom_c(seismometer_i2c_handle_s * i2c_handle_init, at24c_eeprom_address_e address_init, at24c_eeprom_size_e size_init)
   : address(address_init), size(size_init), i2c_addr(AT4C_EEPROM_BASE_ADDRESS | (address_init & 0x7))
 {
   SEISMOMETER_ASSERT((address >= 0) && (address < AT24C_EEPROM_ADDRESS_MAX));
   SEISMOMETER_ASSERT((size >= 0)    && (size    < AT24C_EEPROM_SIZE_MAX));
   SEISMOMETER_ASSERT(i2c_init != nullptr);
-  i2c_inst = i2c_init;
+  i2c_handle = i2c_handle_init;
 }
 
 
@@ -28,8 +28,10 @@ at24c_eeprom_data_size_t at24c_eeprom_c::read_data(at24c_eeprom_data_address_t s
     uint8_t write_buffer[2]; /* 2 byte address */
     write_buffer[0] = (start_address>>8) & ((AT24C_EEPROM_SIZE_64K==size)?0x1F:0x0F);
     write_buffer[1] = (start_address&0xFF);
-    SEISMOMETER_ASSERT_CALL(2       == i2c_write_blocking(i2c_inst, i2c_addr, write_buffer, 2, true));
-    SEISMOMETER_ASSERT_CALL(ret_val == i2c_read_blocking (i2c_inst, i2c_addr, buffer, ret_val, false));
+    seismometer_i2c_lock(i2c_handle);
+    SEISMOMETER_ASSERT_CALL(2       == i2c_write_blocking(i2c_handle->i2c_inst, i2c_addr, write_buffer, 2, true));
+    SEISMOMETER_ASSERT_CALL(ret_val == i2c_read_blocking (i2c_handle->i2c_inst, i2c_addr, buffer, ret_val, false));
+    seismometer_i2c_unlock(i2c_handle);
   }
 
   return ret_val;
@@ -44,6 +46,7 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
     at24c_eeprom_data_size_t btw = SEISMOMETER_MIN(bytes_to_write, (get_size_bytes()-start_address));
     uint8_t write_buffer[34]; /* 32-byte page + 2 byte address */
 
+    seismometer_i2c_lock(i2c_handle);
     while(btw > 0)
     {
       at24c_eeprom_data_address_t write_address = (start_address + bytes_written);
@@ -52,7 +55,7 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
 
       at24c_eeprom_data_size_t btw_now = ((btw > 32)?32:btw);
       memcpy(&write_buffer[2], &buffer[bytes_written], btw_now);
-      at24c_eeprom_data_size_t bytes_written_now = i2c_write_blocking(i2c_inst, i2c_addr, write_buffer, btw_now+2, false);
+      at24c_eeprom_data_size_t bytes_written_now = i2c_write_blocking(i2c_handle->i2c_inst, i2c_addr, write_buffer, btw_now+2, false);
       if(bytes_written_now != btw_now+2)
       {
         SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "Failed to write to AT24C EEPROM %u.\n", address);
@@ -61,8 +64,9 @@ at24c_eeprom_data_size_t at24c_eeprom_c::write_data(at24c_eeprom_data_address_t 
       bytes_written+=((bytes_written_now > 2)?(bytes_written_now-2):0);
       btw -= btw_now;
       /* Wait for eeprom to ack write*/
-      while(PICO_ERROR_GENERIC == i2c_write_blocking(i2c_inst, i2c_addr, write_buffer, 2, false)) {tight_loop_contents();}
+      while(PICO_ERROR_GENERIC == i2c_write_blocking(i2c_handle->i2c_inst, i2c_addr, write_buffer, 2, false)) {tight_loop_contents();}
     }
+    seismometer_i2c_unlock(i2c_handle);
   }
 
   return bytes_written;

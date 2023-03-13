@@ -7,7 +7,7 @@
 #include "seismometer_eeprom.hpp"
 #include "seismometer_utils.hpp"
 
-at24c_eeprom_c eeprom(i2c0, AT24C_EEPROM_ADDRESS_7, AT24C_EEPROM_SIZE_32K);
+at24c_eeprom_c *eeprom;
 
 static const seismometer_eeprom_data_s default_eeprom_data =
 {
@@ -33,7 +33,7 @@ static bool eeprom_write_header(const seismometer_eeprom_header_s *header)
   SEISMOMETER_ASSERT(header != nullptr);
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Writing new header to EEPROM.\n");
   bool ret_val = (sizeof(seismometer_eeprom_header_s) == 
-                  eeprom.write_data(EEPROM_ADDRESS_HEADER, (uint8_t*) header, sizeof(seismometer_eeprom_header_s)));
+                  eeprom->write_data(EEPROM_ADDRESS_HEADER, (uint8_t*) header, sizeof(seismometer_eeprom_header_s)));
   return ret_val;
 }
 static bool eeprom_write_sample_log_config(const seismometer_eeprom_sample_log_config_s * config)
@@ -41,7 +41,7 @@ static bool eeprom_write_sample_log_config(const seismometer_eeprom_sample_log_c
   SEISMOMETER_ASSERT(config != nullptr);
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Writing new sample log config to EEPROM.\n");
   bool ret_val = (sizeof(seismometer_eeprom_sample_log_config_s) == 
-                  eeprom.write_data(EEPROM_ADDRESS_SAMPLE_LOG_CONFIG, (uint8_t*) config, sizeof(seismometer_eeprom_sample_log_config_s)));
+                  eeprom->write_data(EEPROM_ADDRESS_SAMPLE_LOG_CONFIG, (uint8_t*) config, sizeof(seismometer_eeprom_sample_log_config_s)));
   return ret_val;
 }
 static bool eeprom_write_data(const seismometer_eeprom_data_s *new_eeprom_data)
@@ -68,16 +68,18 @@ static bool eeprom_write_data(const seismometer_eeprom_data_s *new_eeprom_data)
   return ret_val;
 }
 
-void eeprom_init()
+void eeprom_init(seismometer_i2c_handle_s *i2c_handle)
 {
+
+  eeprom = new at24c_eeprom_c(i2c_handle, AT24C_EEPROM_ADDRESS_7, AT24C_EEPROM_SIZE_32K);
   #ifdef SEISMOMETER_DEBUG_BUILD
-  eeprom.dump_eeprom();
+  eeprom->dump_eeprom();
   watchdog_update();
   #endif
 
   SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Loading data from EEPROM.\n");
   SEISMOMETER_ASSERT_CALL(sizeof(eeprom_data.header) == 
-    eeprom.read_data(EEPROM_ADDRESS_HEADER, (uint8_t*) &eeprom_data.header, sizeof(eeprom_data.header)));
+    eeprom->read_data(EEPROM_ADDRESS_HEADER, (uint8_t*) &eeprom_data.header, sizeof(eeprom_data.header)));
 
   if((0 !=strncmp((char*)eeprom_data.header.identifier, EEPROM_IDENTIFIER, SEISMOMETER_EEPROM_IDENTIFIER_LENGTH)) ||
      (eeprom_data.header.version <= SEISMOMETER_EEPROM_VERSION_INVALID) ||
@@ -93,7 +95,7 @@ void eeprom_init()
     {
       SEISMOMETER_PRINTF(SEISMOMETER_LOG_ERROR, "EEPROM data is invalid.\n");
     }
-    eeprom.clear_eeprom(0xFF);
+    eeprom->clear_eeprom(0xFF);
     watchdog_update();
     SEISMOMETER_PRINTF(SEISMOMETER_LOG_INFO, "Programming default EEPROM.\n");
 
@@ -102,7 +104,7 @@ void eeprom_init()
   }
 
   SEISMOMETER_ASSERT_CALL(sizeof(eeprom_data.sample_log_config) == 
-    eeprom.read_data(EEPROM_ADDRESS_SAMPLE_LOG_CONFIG, (uint8_t*) &eeprom_data.sample_log_config, sizeof(eeprom_data.sample_log_config)));
+    eeprom->read_data(EEPROM_ADDRESS_SAMPLE_LOG_CONFIG, (uint8_t*) &eeprom_data.sample_log_config, sizeof(eeprom_data.sample_log_config)));
 }
 
 bool eeprom_request_reset()

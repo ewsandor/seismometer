@@ -1,8 +1,7 @@
 #ifndef __MPU_6500_HPP__
 #define __MPU_6500_HPP__
 
-#include <hardware/i2c.h>
-
+#include "seismometer_i2c.hpp"
 #include "seismometer_types.hpp"
 
 typedef int16_t mpu_6500_acceleration_t;
@@ -15,7 +14,7 @@ typedef struct
 
 typedef uint16_t mpu_6500_temperature_t;
 
-void mpu_6500_init(i2c_inst_t *i2c);
+void mpu_6500_init(seismometer_i2c_handle_s *i2c);
 void mpu_6500_calibrate();
 void mpu_6500_read();
 void mpu_6500_accelerometer_data_raw(mpu_6500_accelerometer_data_s *accelerometer_data);

@@ -4,11 +4,12 @@
 #include <hardware/i2c.h>
 #include <pico/time.h>
 
+#include "seismometer_i2c.hpp"
 #include "seismometer_types.hpp"
 
 typedef void (*rtc_ds3231_alarm_cb)(void* user_data_ptr);
 
-void            rtc_ds3231_init(i2c_inst_t *i2c);
+void            rtc_ds3231_init(seismometer_i2c_handle_s *i2c);
 /* Reads from the RTC with given reference time */
 void            rtc_ds3231_read(absolute_time_t reference);
 /* Sets the RTC with given time (ms since unix epoch) */

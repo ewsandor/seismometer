@@ -1,6 +1,7 @@
 #ifndef __SEISMOMETER_EEPROM_HPP__
 #define __SEISMOMETER_EEPROM_HPP__
 
+#include "seismometer_i2c.hpp"
 #include "seismometer_types.hpp"
 
 typedef struct  __attribute__((packed))
@@ -32,7 +33,7 @@ typedef struct __attribute__((packed))
   seismometer_eeprom_sample_log_config_s sample_log_config;
 } seismometer_eeprom_data_s;
 
-void eeprom_init();
+void eeprom_init(seismometer_i2c_handle_s *i2c_handle);
 bool eeprom_request_reset();
 
 const seismometer_eeprom_sample_log_config_s *eeprom_get_sample_log_config();

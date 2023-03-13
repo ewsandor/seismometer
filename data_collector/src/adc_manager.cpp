@@ -35,7 +35,7 @@ void adc_manager_init(adc_channel_mask_t enabled_channels_init)
   }
 }
 
-void adc_manager_read()
+void __time_critical_func(adc_manager_read())
 {
   adc_channel_t      adc_channel = 0;
   adc_channel_mask_t enabled_channels_copy = enabled_channels;

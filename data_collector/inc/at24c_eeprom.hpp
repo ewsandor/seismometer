@@ -1,7 +1,7 @@
 #ifndef __AT24C_EEPROM_HPP__
 #define __AT24C_EEPROM_HPP__
 
-#include <hardware/i2c.h>
+#include "seismometer_i2c.hpp"
 
 typedef enum
 {
@@ -29,12 +29,12 @@ typedef unsigned int at24c_eeprom_data_address_t;
 class at24c_eeprom_c
 {
   private:
-    i2c_inst_t                   *i2c_inst;
+    seismometer_i2c_handle_s     *i2c_handle;
     const at24c_eeprom_address_e  address;
     const uint8_t                 i2c_addr;
     const at24c_eeprom_size_e     size;
   public:
-    at24c_eeprom_c(i2c_inst_t *, at24c_eeprom_address_e, at24c_eeprom_size_e);
+    at24c_eeprom_c(seismometer_i2c_handle_s *, at24c_eeprom_address_e, at24c_eeprom_size_e);
 
     inline at24c_eeprom_size_e      get_size()       const { return size; };
     inline at24c_eeprom_data_size_t get_size_bytes() const { return ((AT24C_EEPROM_SIZE_64K==size)?8192:4096); };
