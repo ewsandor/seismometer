@@ -320,6 +320,14 @@
     [
       "188876b5-6a53-4d8a-876b-00f08f885716",
       ""
+    ],
+    [
+      "06f7558a-80ea-4607-94fb-555fe503eb9e",
+      "solenoid_amplifier"
+    ],
+    [
+      "e99ef20f-3722-4cf0-b4c8-9ea415ae6081",
+      "micro_sd_spi"
     ]
   ],
   "text_variables": {}
